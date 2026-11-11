@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="theme-color" content="#0B2E33">
+<meta name="theme-color" content="#183C36">
 <meta name="description" content="Gestia: ventas, stock, caja y clientes para tu negocio.">
 <title>Gestia</title>
 <link rel="icon" href="icon.svg" type="image/svg+xml">
@@ -11,10 +11,12 @@
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400..800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="styles.css">
+<script>(function(){var t="light";try{t=localStorage.getItem("gestia-tema")||t;}catch(e){}if(t==="light"||t==="dark")document.documentElement.dataset.theme=t;})();</script>
 </head>
 <body>
+<button class="skip" data-act="saltar">Saltar al contenido</button>
 <div class="app">
   <aside class="side" id="side"></aside>
   <main class="main" id="view" aria-live="polite"></main>

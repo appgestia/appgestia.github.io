@@ -191,6 +191,49 @@ await prueba('nombres con código HTML no se ejecutan', async p => {
   await ev(p, () => { UI.ventasTab = 'cc'; UI.vista = 'ventas'; render(); ACT['prod-edit']({ dataset: { id: S.productos[S.productos.length - 1].id } }); ACT['prod-etiquetas'](); }); await espera(200);
   anota('nombres con código HTML no se ejecutan', await ev(p, () => window.__x) === 0); });
 
+console.log('\nAccesibilidad');
+await prueba('las filas de una tabla se abren con Tab y Enter', async p => {
+  await ev(p, () => { location.hash = 'productos'; }); await espera(200);
+  const foco = await ev(p, () => { const r = document.querySelector('tr.click'); r.focus(); return document.activeElement === r && r.tabIndex === 0; });
+  await p.keyboard.press('Enter'); await espera(150);
+  anota('las filas de una tabla se abren con Tab y Enter', foco && await ev(p, () => !!document.querySelector('#ov #frm'))); });
+await prueba('el error de un formulario aparece junto al campo', async p => {
+  await ev(p, () => { location.hash = 'productos'; ACT['prod-nuevo'](); document.querySelector('#frm [name="nombre"]').value = ''; document.querySelector('#okb').click(); }); await espera(100);
+  const r = await ev(p, () => { const el = document.querySelector('#frm [name="nombre"]'); return { inval: el.getAttribute('aria-invalid'), msg: !!document.querySelector('#e_nombre'), foco: document.activeElement === el }; });
+  await p.keyboard.type('Queso'); await espera(50);
+  const limpio = await ev(p, () => !document.querySelector('#e_nombre') && !document.querySelector('#frm [name="nombre"]').hasAttribute('aria-invalid'));
+  anota('el error de un formulario aparece junto al campo', r.inval === 'true' && r.msg && r.foco && limpio, JSON.stringify({ ...r, limpio })); });
+{ const p = await nueva(390, 844, true); await limpio(p);
+  await ev(p, () => { location.hash = 'ventas'; }); await espera(200);
+  const m = await ev(p, () => { const t = [...document.querySelectorAll('.tile:not(.out)')].find(t => / u$/.test(t.querySelector('.st').textContent.trim())); t.click();
+    const h = s => Math.round(document.querySelector(s).getBoundingClientRect().height); return { stp: h('.stp button'), del: h('.line .del'), btn: h('.btn:not(.sm)') }; });
+  anota('en el celular los botones de la venta miden 40px o más', m.stp >= 44 && m.del >= 44 && m.btn >= 40, JSON.stringify(m)); await p.close(); }
+
+console.log('\nLectura rápida y teclado');
+await prueba('los indicadores comparan sólo si hay historia suficiente', async p => {
+  const n = await ev(p, () => document.querySelectorAll('.kpi .dlt').length); await ev(p, () => { location.hash = 'reportes'; }); await espera(200);
+  const r = await ev(p, () => document.querySelectorAll('.kpi .dlt').length); anota('los indicadores comparan sólo si hay historia suficiente', n === 0 && r >= 1 && !p._err.length, JSON.stringify({ n, r, err: p._err })); });
+await prueba('una tabla se ordena tocando el encabezado', async p => {
+  await ev(p, () => { location.hash = 'productos'; }); await espera(200);
+  const r = await ev(p, () => { const th = [...document.querySelectorAll('.tw th')].find(t => t.textContent.trim() === 'Precio'); th.click();
+    const v = [...th.closest('table').tBodies[0].rows].map(f => valorCelda(f.cells[th.cellIndex])); return { orden: th.getAttribute('aria-sort'), ok: v.every((x, i) => !i || v[i - 1] >= x), n: v.length }; });
+  anota('una tabla se ordena tocando el encabezado', r.orden === 'descending' && r.ok && r.n > 3, JSON.stringify(r)); });
+await prueba('Ctrl+K encuentra un producto y lo abre', async p => {
+  await p.keyboard.down('Control'); await p.keyboard.press('k'); await p.keyboard.up('Control'); await espera(80);
+  await p.keyboard.type('mortad'); await p.keyboard.press('Enter'); await espera(120);
+  const v = await ev(p, () => { const f = document.querySelector('#frm [name="nombre"]'); return f && f.value; });
+  anota('Ctrl+K encuentra un producto y lo abre', v === 'Mortadela' && !p._err.length, v + ' ' + p._err.join(' | ')); });
+
+await prueba('el tema arranca en claro y recuerda la elección', async p => {
+  const ini = await ev(p, () => document.documentElement.dataset.theme || 'auto');
+  await ev(p, () => { location.hash = 'ajustes'; }); await espera(200);
+  await ev(p, () => document.querySelector('[data-act="tema"][data-v="oscuro"]').click()); await p.reload({ waitUntil: 'networkidle0' }); await espera(150);
+  const osc = await ev(p, () => document.documentElement.dataset.theme || 'auto');
+  await ev(p, () => { location.hash = 'ajustes'; }); await espera(200);
+  await ev(p, () => document.querySelector('[data-act="tema"][data-v="auto"]').click()); await p.reload({ waitUntil: 'networkidle0' }); await espera(150);
+  const aut = await ev(p, () => document.documentElement.dataset.theme || 'auto');
+  anota('el tema arranca en claro y recuerda la elección', ini === 'light' && osc === 'dark' && aut === 'auto' && !p._err.length, JSON.stringify({ ini, osc, aut, err: p._err })); });
+
 const fallas = R.filter(x => !x.ok).length;
 console.log(`\n${fallas ? fallas + ' de ' + R.length + ' pruebas fallaron' : 'Las ' + R.length + ' pruebas pasaron'}\n`);
 await b.close(); srv.close(); process.exit(fallas ? 1 : 0);
