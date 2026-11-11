@@ -11,9 +11,9 @@ function archivosDe(cid){ const a=(S.archivos||[]).filter(x=>x.clienteId===cid).
   return a.concat(c).sort((p,q)=>p.fecha<q.fecha?1:p.fecha>q.fecha?-1:0); }
 function archivosHtml(cid){ const L=archivosDe(cid);
   return `<div class="arch"><div class="archh"><h3>Archivos${L.length?`<span class="cnt">${L.length}</span>`:''}</h3>${L.length?`<button class="btn sm" data-act="arch-subir" data-id="${cid}">${CLIP} Subir archivos</button>`:''}</div>
-  ${L.length?`<div class="tw"><table><tbody>${L.map(a=>`<tr><td style="white-space:nowrap">${fechaTxt(a.fecha)}</td><td><b>${esc(a.nombre)}</b>${a.descripcion?`<div class="sm muted">${esc(a.descripcion)}</div>`:''}</td>
+  ${L.length?`<div class="tw"><table><tbody>${L.map(a=>`<tr><td class="nw">${fechaTxt(a.fecha)}</td><td><b>${esc(a.nombre)}</b>${a.descripcion?`<div class="sm muted">${esc(a.descripcion)}</div>`:''}</td>
     <td>${pill(a.origen==='cobro'?'good':'info',a.categoria||'Otro')} <span class="sm muted">${tipoArch(a.tipo,a.nombre)}${a.tam?' · '+tamTxt(a.tam):''}</span></td>
-    <td class="n" style="white-space:nowrap"><button class="btn sm ghost" data-act="adj-ver" data-id="${esc(a.adjId)}">Ver</button>${a.origen==='archivo'?`<button class="btn sm ghost" data-act="arch-del" data-id="${esc(a.id)}" data-cli="${cid}" title="Borrar archivo" aria-label="Borrar archivo">✕</button>`:''}</td></tr>`).join('')}</tbody></table></div>`
+    <td class="n nw"><button class="btn sm ghost" data-act="adj-ver" data-id="${esc(a.adjId)}">Ver</button>${a.origen==='archivo'?`<button class="btn sm ghost" data-act="arch-del" data-id="${esc(a.id)}" data-cli="${cid}" title="Borrar archivo" aria-label="Borrar archivo">✕</button>`:''}</td></tr>`).join('')}</tbody></table></div>`
   :`<button class="archvac" data-act="arch-subir" data-id="${cid}">${CLIP}<b>Subir archivos</b><span>PDF o fotos</span></button>`}</div>`; }
 
 /* ---------- respaldo con archivos: van dentro del mismo .json, en base64 ---------- */
@@ -33,7 +33,7 @@ ACT['arch-subir']=el=>{ const cid=+el.dataset.id, c=IDX.cli[cid]; if(!c) return;
   abrir('Subir archivos · '+c.nombre,`<div class="comp" id="archz"><input type="file" id="archf" multiple hidden><button class="btn" type="button" id="archb">${CLIP} Elegir archivos</button>
     <span class="sm muted" id="archst">PDF, fotos, Word, Excel… Podés elegir varios a la vez, arrastrarlos acá o pegar una captura con Ctrl+V. Máximo 25 MB cada uno.</span><div id="archl" style="width:100%"></div></div>
     <form id="frm" class="frm" autocomplete="off"><label class="field">Tipo de archivo<select name="categoria">${opts(CATS_ARCH,'Factura')}</select></label><label class="field">Fecha<input type="date" name="fecha" value="${hoy()}"></label>
-    <label class="field full">Descripción (opcional)<input name="descripcion" placeholder="Ej. Factura A 0001-00001234 · Remito de octubre"></label></form><div id="err" class="sm dn" style="margin-top:8px" role="alert"></div>`,
+    <label class="field full">Descripción (opcional)<input name="descripcion" placeholder="Ej. Factura A 0001-00001234 · Remito de octubre"></label></form><div id="err" class="sm dn mt8" role="alert"></div>`,
     {noFocus:true,foot:`<button class="btn" data-act="cerrar" type="button">Cancelar</button><button class="btn pri" id="archok" type="button" disabled>Guardar</button>`});
   const z=$('#archz'), inp=$('#archf'); $('#archb').onclick=()=>inp.click(); inp.onchange=()=>{ archAgregar([...inp.files]); inp.value=''; };
   z.ondragover=e=>{ e.preventDefault(); z.classList.add('drag'); }; z.ondragleave=()=>z.classList.remove('drag'); z.ondrop=e=>{ e.preventDefault(); z.classList.remove('drag'); archAgregar([...e.dataTransfer.files]); };
