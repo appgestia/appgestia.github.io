@@ -231,22 +231,40 @@ function paginador(act,cur,tp,total,por,sing,plur,key){
       <span class="pgm sm muted">${cur} de ${tp}</span>
       ${bt(cur+1,'<span class="pgt">Siguiente</span> ›','Página siguiente',cur>=tp)}</div></nav>`; }
 function pagLista(key,arr,sig,re,sing,plur){ const P=PAGS[key]||(PAGS[key]={n:12,p:1,sg:null,aj:0}); P.re=re; if(P.sg!==sig){ P.sg=sig; P.p=1; } // si cambia un filtro, vuelve a la primera página
-  const tp=Math.max(1,Math.ceil(arr.length/P.n)); P.p=Math.min(Math.max(1,P.p),tp); setTimeout(()=>pagFit(key),0);
-  return {P,items:arr.slice((P.p-1)*P.n,P.p*P.n),nav:paginador('pag',P.p,tp,arr.length,P.n,sing||'resultado',plur||'resultados',key)}; }
-// cuántas filas entran en lo que queda de pantalla (en el celular, 10)
-function pagFit(key){ const P=PAGS[key], el=document.querySelector('[data-pf="'+key+'"]'); if(!P||!el||!P.re) return; let n=10;
-  if(innerWidth>860){ const top=el.getBoundingClientRect().top+scrollY, th=el.querySelector('thead'), ex=+(el.dataset.pfx||0), libre=innerHeight-top-64-24-ex;
-    if(el.classList.contains('provs')){ const c=el.firstElementChild, cs=getComputedStyle(el), cols=Math.max(1,cs.gridTemplateColumns.split(' ').length); n=Math.max(cols,Math.floor(libre/((c?c.offsetHeight:150)+(parseFloat(cs.rowGap)||0)))*cols); }
-    else { const f=el.querySelector('tbody tr, .fila'); n=Math.max(3,Math.floor((libre-(th?th.offsetHeight:0))/(f?f.offsetHeight:56))); } }
-  if(n===P.n||P.aj>=2){ P.aj=0; return; } P.aj++; P.p=Math.floor(((P.p-1)*P.n)/n)+1; P.n=n; P.re(); }
-ACT['pag']=el=>{ const P=PAGS[el.dataset.k]; if(!P) return; P.p=+el.dataset.p||1; if(P.re) P.re(); };
+  const kk=sig+'|'+innerWidth; if(P.kk!==kk){ P.kk=kk; P.h=0; P.cw=null; P.rh=null; P.hk=null; } P.tot=arr.length; // cambió el contenido o el ancho: se vuelven a medir alto y columnas
+  const tp=Math.max(1,Math.ceil(arr.length/P.n)); P.p=Math.min(Math.max(1,P.p),tp); queueMicrotask(()=>pagFit(key));
+  return {P,pf:`data-pf="${key}" style="min-height:${P.h||0}px"`,items:arr.slice((P.p-1)*P.n,P.p*P.n),nav:paginador('pag',P.p,tp,arr.length,P.n,sing||'resultado',plur||'resultados',key)}; }
+// cuántas filas entran en lo que queda de pantalla (en el celular, 10). Se mide con la fila más alta de la lista entera, así no depende de la página que se ve.
+const pagSel=k=>'[data-pf="'+k+'"]';
+function pagFilas(el){ return el.classList.contains('provs')?[...el.children]:[...el.querySelectorAll('tbody tr, .fila')]; }
+function pagFit(key){ const P=PAGS[key]; let el=document.querySelector(pagSel(key)); if(!P||!el||!P.re||P.ocup) return;
+  if(P.rh==null){ pagBase(key); el=document.querySelector(pagSel(key)); if(!el) return; }
+  let n=10;
+  if(innerWidth>860){ const top=el.getBoundingClientRect().top+scrollY, th=el.querySelector('thead'), ex=+(el.dataset.pfx||0), libre=innerHeight-top-64-24-ex, rh=P.rh||56;
+    if(el.classList.contains('provs')){ const cs=getComputedStyle(el), cols=Math.max(1,cs.gridTemplateColumns.split(' ').length); n=Math.max(cols,Math.floor(libre/(rh+(parseFloat(cs.rowGap)||0)))*cols); }
+    else n=Math.max(3,Math.floor((libre-(th?th.offsetHeight:0))/rh)); }
+  if(n===P.n||P.aj>=2){ P.aj=0; pagAplicar(key); return; } P.aj++; P.p=Math.floor(((P.p-1)*P.n)/n)+1; P.n=n; P.h=0; P.re(); }
+// Medición base (una vez por contenido y ancho): se dibuja la lista entera sin pintarla para conocer el ancho de cada columna y la fila más alta.
+function pagBase(key){ const P=PAGS[key]; P.ocup=true; const n0=P.n, p0=P.p; P.rh=0; P.cw=[];
+  try{ P.n=1e9; P.p=1; P.re(); const e=document.querySelector(pagSel(key));
+    if(e){ const t=e.querySelector('table'), w=t?[...t.querySelectorAll('thead th')].map(x=>x.getBoundingClientRect().width):[]; P.cw=w.reduce((a,b)=>a+b,0)>50?w:[];
+      let m=0; pagFilas(e).forEach(f=>{ const h=f.offsetHeight; if(h>m) m=h; }); P.rh=m; } }
+  finally{ P.n=n0; P.p=p0; P.re(); P.ocup=false; } }
+/* Estabilidad entre páginas: (1) las columnas de las tablas quedan fijas con el ancho que necesita la lista entera, así el texto no se corre al cambiar de página;
+   (2) la lista conserva el alto de su página más larga, así el paginado queda siempre en el mismo lugar aunque la última página tenga pocas filas. */
+function pagAplicar(key){ const P=PAGS[key]; let el=document.querySelector(pagSel(key)); if(!P||!el||P.ocup) return;
+  const hk=P.kk+'|'+P.n; if(P.hk!==hk){ P.hk=hk; const tp=Math.ceil((P.tot||0)/P.n), p0=P.p;
+    if(tp>1&&tp<=60){ P.ocup=true; let hm=0; try{ for(let q=1;q<=tp;q++){ P.p=q; P.re(); const e=document.querySelector(pagSel(key)); if(e){ e.style.minHeight=''; hm=Math.max(hm,e.offsetHeight); } } } finally{ P.p=p0; P.re(); P.ocup=false; } P.h=Math.max(P.h||0,hm); el=document.querySelector(pagSel(key)); if(!el) return; } }
+  const t=el.querySelector('table'); if(t&&P.cw&&P.cw.length&&P.cw.length===t.querySelectorAll('thead th').length){ if(!t.querySelector('colgroup')){ const cg=document.createElement('colgroup'); P.cw.forEach(w=>{ const c=document.createElement('col'); c.style.width=w+'px'; cg.appendChild(c); }); t.insertBefore(cg,t.firstChild); } t.style.tableLayout='fixed'; t.style.minWidth=P.cw.reduce((a,b)=>a+b,0)+'px'; }
+  el.style.minHeight=''; P.h=Math.max(P.h||0,el.offsetHeight); el.style.minHeight=P.h+'px'; }
+ACT['pag']=el=>{ const k=el.dataset.k, P=PAGS[k]; if(!P) return; P.p=+el.dataset.p||1; if(P.re){ P.re(); pagAplicar(k); } };
 addEventListener('resize',()=>{ clearTimeout(pagFit._t); pagFit._t=setTimeout(()=>Object.keys(PAGS).forEach(k=>{ if(document.querySelector('[data-pf="'+k+'"]')){ PAGS[k].aj=0; if(PAGS[k].re) PAGS[k].re(); } }),120); });
 FILL.ventas=function(){ const r=$('#res'); if(!r) return;
   if(UI.ventasTab==='cc'){ r.innerHTML=ccVentasHtml(); return; }
   if(UI.ventasTab==='historial'){ const f=UI.f.hist; const q=f.q.trim().toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'');
     const todas=S.ventas.filter(v=>(!f.desde||v.fecha>=f.desde)&&(!f.hasta||v.fecha<=f.hasta)&&(!q||('#'+v.id).includes(q)||String(v.id)===q||cliNom(v.clienteId).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').includes(q)||v.medio.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').includes(q))).sort((a,b)=>b.id-a.id);
     const pg=pagLista('hist',todas,[f.q,f.desde,f.hasta].join('|'),()=>FILL.ventas(),'venta','ventas'), l=pg.items;
-    r.innerHTML=l.length?`<div class="tw" data-pf="hist"><table><thead><tr><th>N°</th><th>Fecha</th><th>Cliente</th><th class="n">Ítems</th><th>Pago</th><th class="n">Total</th><th>Estado</th></tr></thead><tbody>${l.map(v=>`<tr class="click ${v.estado==='Anulada'?'off':''}" data-act="venta-ver" data-id="${v.id}"><td>#${v.id}</td><td>${fechaTxt(v.fecha)} ${v.hora||''}</td><td>${esc(cliNom(v.clienteId))}</td><td class="n">${v.sinDetalle?pill('mute','sin detalle'):v.items.length}</td><td>${esc(v.medio)}${v.comprobante||v.operacion?` <span title="Con comprobante" style="color:var(--muted)">${typeof CLIP!=='undefined'?CLIP:''}</span>`:''}</td><td class="n b">${money(v.total)}</td><td>${v.estado==='Anulada'?pill('bad','Anulada'):pill('good','Registrada')}</td></tr>`).join('')}</tbody></table></div>${pg.nav}`:vacioHtml('No hay ventas con esos filtros.'); return; }
+    r.innerHTML=l.length?`<div class="tw" ${pg.pf}><table><thead><tr><th>N°</th><th>Fecha</th><th>Cliente</th><th class="n">Ítems</th><th>Pago</th><th class="n">Total</th><th>Estado</th></tr></thead><tbody>${l.map(v=>`<tr class="click ${v.estado==='Anulada'?'off':''}" data-act="venta-ver" data-id="${v.id}"><td>#${v.id}</td><td>${fechaTxt(v.fecha)} ${v.hora||''}</td><td>${esc(cliNom(v.clienteId))}</td><td class="n">${v.sinDetalle?pill('mute','sin detalle'):v.items.length}</td><td>${esc(v.medio)}${v.comprobante||v.operacion?` <span title="Con comprobante" style="color:var(--muted)">${typeof CLIP!=='undefined'?CLIP:''}</span>`:''}</td><td class="n b">${money(v.total)}</td><td>${v.estado==='Anulada'?pill('bad','Anulada'):pill('good','Registrada')}</td></tr>`).join('')}</tbody></table></div>${pg.nav}`:vacioHtml('No hay ventas con esos filtros.'); return; }
   const l=posLista().slice(0,80).sort((a,b)=>(stockDe(a.id)<=0)-(stockDe(b.id)<=0)); // los agotados van al final
   r.innerHTML=l.length?`<div class="tiles">${l.map(p=>{ const s=stockDe(p.id); return s<=0
     ?`<button class="tile out" data-act="pos-add" data-id="${p.id}"><span class="bdg">Agotado</span><span class="nm">${esc(p.nombre)}</span><span class="pr">${money(p.precio)}${p.unidad==='kg'?'<small> / kg</small>':''}</span><span class="st">Sin stock</span></button>`

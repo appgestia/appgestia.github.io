@@ -720,7 +720,7 @@ table.tcards .stk{align-items:flex-start}
 .pager .pgb{display:flex;align-items:center;gap:4px}
 .pager .pgn{display:flex;align-items:center;gap:4px}
 .pager .pg{min-width:34px;height:34px;padding:0 10px;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:8px;font:inherit;font-size:13px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:4px}
-.pager .pg:hover:not(:disabled){background:var(--soft)}
+.pager .pg:hover:not(:disabled):not(.on){background:var(--soft)}
 .pager .pg.on{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
 .pager .pg:disabled{opacity:.45;cursor:default}
 .pager .gap{color:var(--muted);padding:0 2px}
@@ -788,3 +788,10 @@ table.tcards .stk{align-items:flex-start}
 .filas{background:var(--surface);border:1px solid var(--line);border-top:3px solid var(--accent);border-radius:var(--r);box-shadow:var(--sh-1);overflow:hidden}
 .filas .fila{padding-left:14px;padding-right:14px}.filas .fila:last-child{border-bottom:0}
 .filas .fila.click:hover{background:var(--accent-soft)}
+
+/* Estabilidad al cambiar de página: la barra de scroll no mueve el contenido y la columna de botones de los lotes siempre ocupa su lugar */
+html{scrollbar-gutter:stable}
+.fila .fa{min-width:96px;display:flex;justify-content:flex-end;align-items:center}
+@media (max-width:860px){.fila .fa{min-width:0}}
+/* los contenedores con encabezados por grupo (lotes, gastos) contienen sus márgenes, para que el alto reservado sea exacto */
+div[data-pf]:not(.provs):not(.tw):not(.filas){display:flow-root}
