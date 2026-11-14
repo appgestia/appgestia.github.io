@@ -795,3 +795,25 @@ html{scrollbar-gutter:stable}
 @media (max-width:860px){.fila .fa{min-width:0}}
 /* los contenedores con encabezados por grupo (lotes, gastos) contienen sus márgenes, para que el alto reservado sea exacto */
 div[data-pf]:not(.provs):not(.tw):not(.filas){display:flow-root}
+
+/* ===== Barra lateral: letras blancas ===== */
+:root{--side-muted:#D6E4DD}
+.side .nav a{color:#fff;font-weight:550}
+.side .nav a:hover{color:#fff;background:#ffffff1f}
+.side .nav a.on{color:#fff;font-weight:700;background:#ffffff1c}
+.side .nav .grp{color:#fff;opacity:.78}
+.side .biz b{color:#fff}.side .biz small{color:#ffffffd9}
+.side .sidefoot{color:#ffffffd9}
+
+/* ===== Datos importantes bien a la vista ===== */
+/* total de cada mes en Gastos */
+.gh .gt{margin-left:auto;display:inline-flex;align-items:baseline;gap:8px;font-size:21px;font-weight:750;color:var(--ink);background:var(--accent-soft);padding:3px 12px;border-radius:10px;font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+.gh .gt::before{content:"Total del mes";font-size:11.5px;font-weight:600;color:var(--accent-text);letter-spacing:0}
+/* estado de vencimiento de cada lote */
+.vt{font-weight:700}.vt.bad{color:var(--bad)}.vt.warn{color:var(--warn)}.vt.good{color:var(--good)}
+/* stock en los cuadros de producto al vender */
+.tile .st{font-size:12.5px;color:var(--ink);font-weight:600}
+/* retiros, gastos y compras en efectivo de la planilla de caja */
+.planilla tr.sale td{color:var(--ink)}.planilla tr.sale td.n{font-weight:650;color:var(--bad)}
+/* porcentaje de cada producto en «Más vendidos» */
+.tv .pc{font-size:12.5px;color:var(--ink);font-weight:650}
