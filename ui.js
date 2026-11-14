@@ -212,39 +212,41 @@ VIEWS.ventas=function(){
    <div class="card cart" id="cart"></div></div>`;
 };
 ACT['ccv-ver']=el=>{ UI.f.ccv.ver=el.dataset.v; document.querySelectorAll('.seg [data-act="ccv-ver"]').forEach(b=>b.classList.toggle('on',b===el)); FILL.ventas(); };
-ACT['tab-ventas']=el=>{ UI.ventasTab=el.dataset.t; UI.f.hist.pag=1; render(); };
+ACT['tab-ventas']=el=>{ UI.ventasTab=el.dataset.t; if(PAGS.hist) PAGS.hist.p=1; render(); };
 ACT['pos-cat']=el=>{ UI.f.pos.cat=el.dataset.c; render(); };
 function posLista(){ const f=UI.f.pos; const q=f.q.trim().toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'');
   return S.productos.filter(p=>p.activo&&(!f.cat||p.categoria===f.cat)&&(!q||p.nombre.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').includes(q)||p.codigo.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').includes(q)||(p.barras&&p.barras.includes(q))||(p.plu&&String(p.plu)===q))); }
-/* Paginado reutilizable: «Mostrando 21–40 de 135 ventas» + Anterior / números / Siguiente */
-let PAG_HIST=12, _pagN=0; // filas por página: se ajusta al alto de la pantalla (ver histAjustar)
-function paginador(act,cur,tp,total,por,sing,plur){
+/* Paginado reutilizable: cada lista muestra tantas filas como entran en el alto libre de la pantalla, para verla entera sin bajar con la barra lateral.
+   Uso: const pg=pagLista('clave',arreglo,firmaDeFiltros,()=>volverADibujar(),'cliente','clientes'); mostrar pg.items y pg.nav; marcar la lista con data-pf="clave". */
+const PAGS={};
+function paginador(act,cur,tp,total,por,sing,plur,key){
   if(total<=por) return `<div class="pager"><span class="sm muted">${total} ${total===1?sing:plur}</span></div>`;
   const a=(cur-1)*por+1, b=Math.min(total,cur*por); const nums=[]; const cerca=n=>n===1||n===tp||Math.abs(n-cur)<=1;
   for(let n=1,ult=0;n<=tp;n++){ if(!cerca(n)) continue; if(ult&&n-ult>1) nums.push(n-ult===2?n-1:'…'); nums.push(n); ult=n; }
-  const bt=(p,t,al,dis)=>`<button class="pg" type="button" data-act="${act}" data-p="${p}" ${dis?'disabled':''} aria-label="${al}">${t}</button>`;
+  const bt=(p,t,al,dis)=>`<button class="pg" type="button" data-act="${act}" data-k="${key}" data-p="${p}" ${dis?'disabled':''} aria-label="${al}">${t}</button>`;
   return `<nav class="pager" aria-label="Paginado">
     <span class="sm muted pgi">Mostrando ${a}–${b} de ${total} ${plur}</span>
     <div class="pgb">${bt(cur-1,'‹ <span class="pgt">Anterior</span>','Página anterior',cur<=1)}
-      <span class="pgn">${nums.map(n=>n==='…'?'<span class="gap" aria-hidden="true">…</span>':`<button class="pg ${n===cur?'on':''}" type="button" data-act="${act}" data-p="${n}" ${n===cur?'aria-current="page"':''} aria-label="Página ${n}">${n}</button>`).join('')}</span>
+      <span class="pgn">${nums.map(n=>n==='…'?'<span class="gap" aria-hidden="true">…</span>':`<button class="pg ${n===cur?'on':''}" type="button" data-act="${act}" data-k="${key}" data-p="${n}" ${n===cur?'aria-current="page"':''} aria-label="Página ${n}">${n}</button>`).join('')}</span>
       <span class="pgm sm muted">${cur} de ${tp}</span>
       ${bt(cur+1,'<span class="pgt">Siguiente</span> ›','Página siguiente',cur>=tp)}</div></nav>`; }
-ACT['hist-pag']=el=>{ const f=UI.f.hist; f.pag=+el.dataset.p||1; FILL.ventas(); };
-// Cuántas filas entran en lo que queda de pantalla para que la lista y el paginado se vean sin bajar con la barra lateral (en el celular, 10).
-function histAjustar(){ const r=$('#res'); if(!r||UI.vista!=='ventas'||UI.ventasTab!=='historial') return;
-  let n=10; if(innerWidth>860){ const top=r.getBoundingClientRect().top+scrollY, fila=r.querySelector('tbody tr'), rh=fila?fila.offsetHeight:46, th=(r.querySelector('thead')||{offsetHeight:44}).offsetHeight;
-    n=Math.max(5,Math.floor((innerHeight-top-th-64-20)/rh)); }
-  if(n===PAG_HIST||_pagN>=2){ _pagN=0; return; } _pagN++;
-  const f=UI.f.hist; f.pag=Math.floor(((f.pag-1)*PAG_HIST)/n)+1; PAG_HIST=n; FILL.ventas(); }
-addEventListener('resize',()=>{ if(UI.vista==='ventas'&&UI.ventasTab==='historial'){ _pagN=0; clearTimeout(histAjustar._t); histAjustar._t=setTimeout(()=>FILL.ventas(),120); } });
+function pagLista(key,arr,sig,re,sing,plur){ const P=PAGS[key]||(PAGS[key]={n:12,p:1,sg:null,aj:0}); P.re=re; if(P.sg!==sig){ P.sg=sig; P.p=1; } // si cambia un filtro, vuelve a la primera página
+  const tp=Math.max(1,Math.ceil(arr.length/P.n)); P.p=Math.min(Math.max(1,P.p),tp); setTimeout(()=>pagFit(key),0);
+  return {P,items:arr.slice((P.p-1)*P.n,P.p*P.n),nav:paginador('pag',P.p,tp,arr.length,P.n,sing||'resultado',plur||'resultados',key)}; }
+// cuántas filas entran en lo que queda de pantalla (en el celular, 10)
+function pagFit(key){ const P=PAGS[key], el=document.querySelector('[data-pf="'+key+'"]'); if(!P||!el||!P.re) return; let n=10;
+  if(innerWidth>860){ const top=el.getBoundingClientRect().top+scrollY, th=el.querySelector('thead'), ex=+(el.dataset.pfx||0), libre=innerHeight-top-64-24-ex;
+    if(el.classList.contains('provs')){ const c=el.firstElementChild, cs=getComputedStyle(el), cols=Math.max(1,cs.gridTemplateColumns.split(' ').length); n=Math.max(cols,Math.floor(libre/((c?c.offsetHeight:150)+(parseFloat(cs.rowGap)||0)))*cols); }
+    else { const f=el.querySelector('tbody tr, .fila'); n=Math.max(3,Math.floor((libre-(th?th.offsetHeight:0))/(f?f.offsetHeight:56))); } }
+  if(n===P.n||P.aj>=2){ P.aj=0; return; } P.aj++; P.p=Math.floor(((P.p-1)*P.n)/n)+1; P.n=n; P.re(); }
+ACT['pag']=el=>{ const P=PAGS[el.dataset.k]; if(!P) return; P.p=+el.dataset.p||1; if(P.re) P.re(); };
+addEventListener('resize',()=>{ clearTimeout(pagFit._t); pagFit._t=setTimeout(()=>Object.keys(PAGS).forEach(k=>{ if(document.querySelector('[data-pf="'+k+'"]')){ PAGS[k].aj=0; if(PAGS[k].re) PAGS[k].re(); } }),120); });
 FILL.ventas=function(){ const r=$('#res'); if(!r) return;
   if(UI.ventasTab==='cc'){ r.innerHTML=ccVentasHtml(); return; }
   if(UI.ventasTab==='historial'){ const f=UI.f.hist; const q=f.q.trim().toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'');
-    const sg=[f.q,f.desde,f.hasta].join('|'); if(f._sg!==sg){ f._sg=sg; f.pag=1; } // si cambia un filtro, vuelve a la primera página
     const todas=S.ventas.filter(v=>(!f.desde||v.fecha>=f.desde)&&(!f.hasta||v.fecha<=f.hasta)&&(!q||('#'+v.id).includes(q)||String(v.id)===q||cliNom(v.clienteId).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').includes(q)||v.medio.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').includes(q))).sort((a,b)=>b.id-a.id);
-    const tp=Math.max(1,Math.ceil(todas.length/PAG_HIST)); f.pag=Math.min(Math.max(1,f.pag||1),tp);
-    const l=todas.slice((f.pag-1)*PAG_HIST,f.pag*PAG_HIST);
-    r.innerHTML=l.length?`<div class="tw"><table><thead><tr><th>N°</th><th>Fecha</th><th>Cliente</th><th class="n">Ítems</th><th>Pago</th><th class="n">Total</th><th>Estado</th></tr></thead><tbody>${l.map(v=>`<tr class="click ${v.estado==='Anulada'?'off':''}" data-act="venta-ver" data-id="${v.id}"><td>#${v.id}</td><td>${fechaTxt(v.fecha)} ${v.hora||''}</td><td>${esc(cliNom(v.clienteId))}</td><td class="n">${v.sinDetalle?pill('mute','sin detalle'):v.items.length}</td><td>${esc(v.medio)}${v.comprobante||v.operacion?` <span title="Con comprobante" style="color:var(--muted)">${typeof CLIP!=='undefined'?CLIP:''}</span>`:''}</td><td class="n b">${money(v.total)}</td><td>${v.estado==='Anulada'?pill('bad','Anulada'):pill('good','Registrada')}</td></tr>`).join('')}</tbody></table></div>${paginador('hist-pag',f.pag,tp,todas.length,PAG_HIST,'venta','ventas')}`:vacioHtml('No hay ventas con esos filtros.'); histAjustar(); return; }
+    const pg=pagLista('hist',todas,[f.q,f.desde,f.hasta].join('|'),()=>FILL.ventas(),'venta','ventas'), l=pg.items;
+    r.innerHTML=l.length?`<div class="tw" data-pf="hist"><table><thead><tr><th>N°</th><th>Fecha</th><th>Cliente</th><th class="n">Ítems</th><th>Pago</th><th class="n">Total</th><th>Estado</th></tr></thead><tbody>${l.map(v=>`<tr class="click ${v.estado==='Anulada'?'off':''}" data-act="venta-ver" data-id="${v.id}"><td>#${v.id}</td><td>${fechaTxt(v.fecha)} ${v.hora||''}</td><td>${esc(cliNom(v.clienteId))}</td><td class="n">${v.sinDetalle?pill('mute','sin detalle'):v.items.length}</td><td>${esc(v.medio)}${v.comprobante||v.operacion?` <span title="Con comprobante" style="color:var(--muted)">${typeof CLIP!=='undefined'?CLIP:''}</span>`:''}</td><td class="n b">${money(v.total)}</td><td>${v.estado==='Anulada'?pill('bad','Anulada'):pill('good','Registrada')}</td></tr>`).join('')}</tbody></table></div>${pg.nav}`:vacioHtml('No hay ventas con esos filtros.'); return; }
   const l=posLista().slice(0,80).sort((a,b)=>(stockDe(a.id)<=0)-(stockDe(b.id)<=0)); // los agotados van al final
   r.innerHTML=l.length?`<div class="tiles">${l.map(p=>{ const s=stockDe(p.id); return s<=0
     ?`<button class="tile out" data-act="pos-add" data-id="${p.id}"><span class="bdg">Agotado</span><span class="nm">${esc(p.nombre)}</span><span class="pr">${money(p.precio)}${p.unidad==='kg'?'<small> / kg</small>':''}</span><span class="st">Sin stock</span></button>`

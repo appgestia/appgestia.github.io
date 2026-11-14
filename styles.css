@@ -751,7 +751,7 @@ table.tcards .stk{align-items:flex-start}
 #view[data-v="ventas"] #res>.tw th{background:var(--side);color:var(--side-ink);border-bottom:0;font-weight:600}
 #view[data-v="ventas"] #res>.tw th:first-child{border-top-left-radius:calc(var(--r) - 1px)}#view[data-v="ventas"] #res>.tw th:last-child{border-top-right-radius:calc(var(--r) - 1px)}
 /* paginado: pegado a la lista, sin tapar el botón «Powered by» */
-@media (min-width:861px){#view[data-v="ventas"]:has(#res>.tw){padding-bottom:20px}#view[data-v="ventas"] .pager{padding:12px 176px 0 2px}}
+@media (min-width:861px){#view:has(.pager){padding-bottom:20px}#res>.pager{padding:12px 176px 0 2px}}
 /* gráfico: barra elegida */
 .hoy .bars .col.sel .bar1{background:#ffffff80;opacity:1}
 .hoy .bars:has(.col.sel) .col:not(.sel) .bar1{opacity:.5}
