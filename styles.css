@@ -38,9 +38,6 @@ a{color:var(--accent-text)}
 /* estructura */
 .app{display:grid;grid-template-columns:228px minmax(0,1fr);min-height:100vh}
 .side{background:var(--side);color:var(--side-ink);padding:18px 12px 14px;display:flex;flex-direction:column;gap:16px;position:sticky;top:0;height:100vh;overflow-y:auto}
-.brand{display:flex;align-items:center;gap:10px;padding:0 6px}
-.brand svg{width:34px;height:34px;flex:none}
-.brand b{font-size:21px;font-weight:700;letter-spacing:-.03em}
 .biz{display:flex;align-items:center;gap:9px;padding:9px 10px;border-radius:10px;background:#ffffff0d;border:1px solid #ffffff14}
 .biz img{width:30px;height:30px;border-radius:50%;object-fit:cover;flex:none;background:#000}
 .biz .ini{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;background:var(--mint);color:var(--side);font-weight:700;font-size:13px;flex:none}
@@ -64,7 +61,7 @@ a{color:var(--accent-text)}
 @media (max-width:860px){
   .app{grid-template-columns:minmax(0,1fr)}
   .side{position:sticky;z-index:20;height:auto;flex-direction:row;align-items:center;gap:10px;padding:10px 12px;overflow:visible}
-  .brand b,.biz,.sidefoot,.nav .grp{display:none}.brand{padding:0}.brand svg{width:30px;height:30px}
+  .biz,.sidefoot,.nav .grp{display:none}
   .nav{flex-direction:row;overflow-x:auto;gap:2px;flex:1;scrollbar-width:none}
   .nav a{white-space:nowrap;padding:7px 10px;font-size:13.5px}
   .main{padding:16px 14px 60px}
@@ -318,11 +315,11 @@ input[type="date"]{background-image:url("data:image/svg+xml,%3Csvg xmlns='http:/
 @keyframes calin{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
 .calh{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}.calh b{font-size:14px}
 .calh button{width:30px;height:30px;border:0;border-radius:8px;background:none;color:var(--ink);font-size:20px;line-height:1;cursor:pointer}.calh button:hover{background:var(--soft)}
-.calw,.cald{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;text-align:center}
+.calw,.cald{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:2px;text-align:center}
 .calw span{font-size:11px;font-weight:700;color:var(--muted);padding:4px 0}
 .cald button{height:34px;border:0;border-radius:8px;background:none;color:var(--ink);font:inherit;cursor:pointer}
 .cald button:hover{background:color-mix(in srgb,var(--accent) 16%,transparent)}
-.cald button.hoy{box-shadow:inset 0 0 0 1px var(--accent);color:var(--accent-text);font-weight:700}
+.cald button.es-hoy{box-shadow:inset 0 0 0 1px var(--accent);color:var(--accent-text);font-weight:700}
 .cald button.sel{background:var(--accent);color:var(--accent-ink);font-weight:700}
 .calf{display:flex;justify-content:space-between;margin-top:8px;padding-top:8px;border-top:1px solid var(--line)}
 .calf button{border:0;background:none;color:var(--accent-text);font:inherit;font-weight:600;cursor:pointer;padding:4px 6px;border-radius:6px}.calf button:hover{background:var(--soft)}
@@ -384,7 +381,6 @@ input[type="date"]{background-image:url("data:image/svg+xml,%3Csvg xmlns='http:/
   /* arriba: marca y botón de menú; las secciones van abajo */
   .side{position:relative;justify-content:space-between;padding:10px 12px 10px 14px}
   .side .nav{display:none}
-  .brand b{display:inline;font-size:19px}
   .mbtn{display:grid;place-items:center;width:40px;height:40px;border:0;border-radius:10px;background:#ffffff10;color:var(--side-ink);cursor:pointer}
   .mbtn svg,.bnav svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
   /* menú lateral con todas las secciones (la misma barra de la computadora) */
@@ -492,17 +488,12 @@ th[aria-sort]:not([aria-sort="none"]){color:var(--ink)}
 .skip:focus{top:12px}
 .main:focus{outline:none}
 kbd{display:inline-block;min-width:18px;padding:0 5px;border:1px solid var(--line);border-bottom-width:2px;border-radius:5px;background:var(--surface);color:var(--muted);font:inherit;font-size:11px;font-weight:600;line-height:17px;text-align:center}
-.qkbtn{display:flex;align-items:center;gap:9px;width:100%;padding:8px 10px;border:1px solid #ffffff1a;border-radius:var(--r-sm);background:#ffffff0a;color:var(--side-muted);font:inherit;font-size:13.5px;cursor:pointer;text-align:left}
-.qkbtn:hover{background:var(--side-hover);color:var(--side-ink)}
-.qkbtn span{flex:1}
-.qkbtn kbd{background:transparent;border-color:#ffffff26;color:var(--side-muted)}
 .qkl{display:flex;flex-direction:column;gap:2px;margin-top:10px;max-height:min(360px,55vh);overflow-y:auto}
 .qkl button{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:9px 10px;border:0;border-radius:var(--r-sm);background:none;color:var(--ink);font:inherit;font-size:14px;text-align:left;cursor:pointer}
 .qkl button span{font-size:12px;color:var(--muted);white-space:nowrap}
 .qkl button b{font-weight:550;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .qkl button:hover{background:var(--soft)}
 .qkl button.on{background:color-mix(in srgb,var(--accent) 14%,transparent);box-shadow:inset 3px 0 0 var(--accent)}
-@media (max-width:860px){.qkbtn{display:none}body.menu-on .qkbtn{display:flex}.qkbtn kbd{display:none}}
 .seg.tema{max-width:380px;margin:0}
 
 /* ================= propuesta: menos plantilla, más mostrador ================= */
@@ -524,8 +515,8 @@ tr.tot td{background:var(--surface);border-top:1px solid var(--ink)}
 /* Panel y Reportes: secciones sobre el fondo, sin caja; el título lleva una línea */
 #view[data-v="panel"] .grid>.card,#view[data-v="reportes"] .grid>.card,#view[data-v="reportes"] #res>.card{background:none;border:0;box-shadow:none;padding:0;border-radius:0}
 #view[data-v="panel"] .grid,#view[data-v="reportes"] .grid{gap:28px 36px}
-#view[data-v="panel"] .grid>.card>h2,#view[data-v="reportes"] .grid>.card>h2,#view[data-v="reportes"] #res>.card>h2,#view[data-v="panel"] .chd{padding-bottom:10px;border-bottom:1px solid var(--line);margin-bottom:14px;font-size:15px}
-#view[data-v="panel"] .chd h2{border:0;padding:0;margin:0}
+#view[data-v="panel"] .grid>.card>h2,#view[data-v="reportes"] .grid>.card>h2,#view[data-v="reportes"] #res>.card>h2,#view[data-v="panel"] .chd,#view[data-v="caja"] .chd{padding-bottom:10px;border-bottom:1px solid var(--line);margin-bottom:14px;font-size:15px}
+#view[data-v="panel"] .chd h2,#view[data-v="caja"] .chd h2{border:0;padding:0;margin:0}
 #view[data-v="panel"] .main,#view[data-v="panel"]{gap:24px}
 /* alertas como bandeja: renglones con punto de estado, sin cajas ni raya lateral */
 .alerts{gap:0}
@@ -561,13 +552,15 @@ pre.ticket{background:#F5F1E4;color:#252A28;border-radius:0;max-width:340px;marg
 .hoy .big{font-size:54px;font-weight:700;letter-spacing:-.045em;line-height:1.02;margin:8px 0 10px;color:#fff;font-variation-settings:'opsz' 32;white-space:nowrap}
 .hoy .d{color:var(--side-muted);font-size:13.5px}.hoy .d b{color:#fff}
 .hoy-n{display:flex;flex-direction:column;justify-content:center;min-width:0}
+.hoy-n .k{min-height:1.4em}
 .hoy-g{display:flex;flex-direction:column;gap:8px;min-width:0}
 .hoy .bars{height:150px;min-height:0;flex:none}
 .hoy .bars .bar1{background:#ffffff38;opacity:1}
 .hoy .bars .col:last-child .bar1{background:var(--mint)}
 .hoy .bars:hover .bar1,.hoy .bars:focus-within .bar1{opacity:.55}.hoy .bars .col:hover .bar1,.hoy .bars .col:focus .bar1{opacity:1}
 .hoy .bars .lb{color:var(--side-muted)}.hoy .bars .lb .wd.fin{color:#fff}
-.hoy .bars .tip{background:#fff;color:#252A28}.hoy .bars .tip::after{border-top-color:#fff}
+.hoy .bars .col:not(:last-child):hover .bar1,.hoy .bars .col:not(:last-child):focus .bar1{background:#ffffff73}
+.hoy .bars .col{cursor:pointer}.hoy .bars .col:focus-visible .bar1{outline:2px solid var(--mint);outline-offset:2px}
 @media (max-width:980px){.hoy{grid-template-columns:minmax(0,1fr);gap:18px}.hoy .big{font-size:44px}}
 @media (max-width:640px){.hoy{padding:18px 16px 14px;border-radius:14px}.hoy .big{font-size:38px}.hoy .bars{height:110px}}
 /* el aviso de datos de ejemplo deja de competir con la portada */
@@ -667,8 +660,10 @@ tr.tot td{background:none}
 .arqueo .frm{grid-template-columns:1fr}
 .arqueo #cj_con{font-size:22px;font-weight:650;padding:12px 14px}
 #cj_dif:not(:empty){padding:10px 12px;border-radius:10px;background:var(--soft);font-size:14px}
-#view[data-v="caja"] .grid>.card:not(.arqueo){background:none;border:0;box-shadow:none;padding:0}
-#view[data-v="caja"] .grid>.card>h2{padding-bottom:10px;border-bottom:1px solid var(--line);margin-bottom:6px}
+/* planilla y cierres son tarjetas como «Para reponer»: encabezado con línea, tabla con títulos de columna */
+#view[data-v="caja"] .chd{flex-wrap:wrap}
+#view[data-v="caja"] .chd .bar{gap:6px}
+#view[data-v="caja"] .arqueo>h2{padding-bottom:10px;border-bottom:1px solid var(--line);margin:0 0 12px}
 /* gastos */
 .gastos{align-items:start}
 .cats{position:sticky;top:90px}
@@ -705,3 +700,91 @@ details.mas>.frm{margin-top:12px}
 input[type=checkbox],input[type=radio]{accent-color:var(--accent)}
 @media (max-width:860px){.head{position:static;backdrop-filter:none;-webkit-backdrop-filter:none}}
 table.tcards .stk{align-items:flex-start}
+
+/* ---------- botón "Powered by Gestia" (abajo a la derecha, como el de Netlify) ---------- */
+.powered{position:fixed;right:14px;bottom:14px;z-index:30;display:inline-flex;align-items:center;gap:8px;padding:6px 12px 6px 7px;border-radius:99px;background:var(--surface);color:var(--ink);border:1px solid var(--line);box-shadow:var(--sh-pop);font-size:12px;font-weight:500;line-height:1;text-decoration:none;transition:transform .12s,border-color .12s}
+.powered:hover{transform:translateY(-1px);border-color:var(--accent)}
+.powered svg{width:22px;height:22px;flex:none}
+.powered b{font-weight:700;letter-spacing:-.01em}
+@media print{.powered{display:none}}
+@media (max-width:860px){
+  .powered{right:10px;bottom:calc(70px + env(safe-area-inset-bottom))}
+  body.con-cbar .powered{bottom:calc(126px + env(safe-area-inset-bottom))}
+  /* sin logo arriba: el botón de menú queda a la derecha y, abierto, el menú deja lugar para cerrarlo */
+  .side .mbtn{margin-left:auto}
+  body.menu-on .side{padding-top:64px}
+}
+
+/* paginado de listas largas */
+.pager{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:14px 2px 2px}
+.pager .pgb{display:flex;align-items:center;gap:4px}
+.pager .pgn{display:flex;align-items:center;gap:4px}
+.pager .pg{min-width:34px;height:34px;padding:0 10px;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:8px;font:inherit;font-size:13px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:4px}
+.pager .pg:hover:not(:disabled){background:var(--soft)}
+.pager .pg.on{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.pager .pg:disabled{opacity:.45;cursor:default}
+.pager .gap{color:var(--muted);padding:0 2px}
+.pager .pgm{display:none;padding:0 6px;white-space:nowrap}
+@media (max-width:640px){
+  .pager{justify-content:center;flex-direction:column;gap:10px}
+  .pager .pgn{display:none}.pager .pgm{display:inline}
+  .pager .pg{height:40px;min-width:40px;padding:0 14px}
+}
+
+/* ---------- color en Ventas y Caja: encabezados verdes ---------- */
+.card{--cp:16px}.arqueo{--cp:18px}
+@media (max-width:860px){.card{--cp:14px}}
+#view[data-v="ventas"] .cart>.chead,#view[data-v="ventas"] .ccside>h2,#view[data-v="ventas"] #ccdet>.card>.cchead,
+#view[data-v="caja"] .chd,#view[data-v="caja"] .arqueo>h2{background:var(--side);color:var(--side-ink);margin:calc(-1*var(--cp)) calc(-1*var(--cp)) 14px;padding:12px var(--cp);border:0;border-radius:calc(var(--r) - 1px) calc(var(--r) - 1px) 0 0;font-size:15px}
+#view[data-v="ventas"] .cart>.chead h2,#view[data-v="ventas"] #ccdet>.card>.cchead h2{color:inherit;margin:0}
+#view[data-v="ventas"] .cart .vnum{color:var(--mint)}
+#view[data-v="ventas"] .cart .chead .cnt,#view[data-v="caja"] .chd .cnt{background:#ffffff26;color:#fff}
+#view[data-v="ventas"] .cart .chead .btn.ghost{color:var(--side-ink)}#view[data-v="ventas"] .cart .chead .btn.ghost:hover{background:#ffffff1f}
+#view[data-v="caja"] .chd .btn,#view[data-v="ventas"] #ccdet>.card>.cchead .btn{background:#ffffff1a;border-color:#ffffff40;color:#fff}
+#view[data-v="caja"] .chd .btn:hover{background:#ffffff33}
+#view[data-v="ventas"] #ccdet>.card>.cchead .muted,#view[data-v="ventas"] #ccdet>.card>.cchead .ccper span{color:var(--side-muted)}
+#view[data-v="ventas"] #ccdet>.card>.cchead b.dn{color:#FFB4A8}#view[data-v="ventas"] #ccdet>.card>.cchead b.up{color:var(--mint)}
+#view[data-v="ventas"] #ccdet>.card>.cchead{margin-bottom:14px}
+#view[data-v="ventas"] .ccside>h2{margin-bottom:12px}
+/* historial: tabla en tarjeta con encabezado verde */
+#view[data-v="ventas"] #res>.tw{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--sh-1);overflow:auto}
+#view[data-v="ventas"] #res>.tw th{background:var(--side);color:var(--side-ink);border-bottom:0;font-weight:600}
+#view[data-v="ventas"] #res>.tw th:first-child{border-top-left-radius:calc(var(--r) - 1px)}#view[data-v="ventas"] #res>.tw th:last-child{border-top-right-radius:calc(var(--r) - 1px)}
+/* paginado: pegado a la lista, sin tapar el botón «Powered by» */
+@media (min-width:861px){#view[data-v="ventas"]:has(#res>.tw){padding-bottom:20px}#view[data-v="ventas"] .pager{padding:12px 176px 0 2px}}
+/* gráfico: barra elegida */
+.hoy .bars .col.sel .bar1{background:#ffffff80;opacity:1}
+.hoy .bars:has(.col.sel) .col:not(.sel) .bar1{opacity:.5}
+
+/* ================= Color en toda la app (modo claro: fondo y líneas salvia; encabezados verdes) ================= */
+@media (prefers-color-scheme: light){:root:not([data-theme="dark"]){--bg:#E7EEE9;--line:#D2DDD6;--soft:#EBF1ED}}
+:root[data-theme="light"]{--bg:#E7EEE9;--line:#D2DDD6;--soft:#EBF1ED}
+
+/* Todas las tarjetas: título sobre banda verde (también Panel y Reportes, que antes eran secciones sin caja) */
+#view[data-v="panel"] .grid>.card,#view[data-v="reportes"] .grid>.card,#view[data-v="reportes"] #res>.card{background:var(--surface);border:1px solid var(--line);box-shadow:var(--sh-1);padding:16px;border-radius:var(--r)}
+.ccside{--cp:14px}
+#view[data-v] .card>h2:first-child,#view[data-v] .card>.chd:first-child,#view[data-v] .card>.chead:first-child,#view[data-v] .card>.cchead:first-child{
+  background:var(--side);color:var(--side-ink);margin:calc(-1*var(--cp)) calc(-1*var(--cp)) 14px;padding:12px var(--cp);border:0;border-radius:calc(var(--r) - 1px) calc(var(--r) - 1px) 0 0;font-size:15px}
+#view[data-v] .card>.chd:first-child h2,#view[data-v] .card>.chead:first-child h2,#view[data-v] .card>.cchead:first-child h2{color:inherit;margin:0;padding:0;border:0}
+#view[data-v] .card>h2:first-child .muted,#view[data-v] .card>h2:first-child .sm,#view[data-v] .card>.chd:first-child .muted{color:var(--side-muted)}
+#view[data-v] .card>h2:first-child .cnt,#view[data-v] .card>.chd:first-child .cnt{background:#ffffff26;color:#fff}
+#view[data-v] .card>.chd:first-child .btn,#view[data-v] .card>.cchead:first-child .btn{background:#ffffff1a;border-color:#ffffff40;color:#fff}
+#view[data-v] .card>.chd:first-child .btn.pri,#view[data-v] .card>.chd:first-child .btn.primary{background:var(--mint);border-color:var(--mint);color:var(--side)}
+#view[data-v] .card>.chd:first-child .btn:hover{background:#ffffff33}
+#view[data-v] .card>.chd:first-child{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+
+/* Tablas: las de la página van en tarjeta con títulos sobre verde; las que están dentro de una tarjeta, con títulos en verde suave */
+#view[data-v] .tw:not(.card .tw){background:var(--surface);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--sh-1);overflow:auto}
+#view[data-v] .tw:not(.card .tw) th{background:var(--side);color:var(--side-ink);border-bottom:0;font-weight:600}
+#view[data-v] .tw:not(.card .tw) th:first-child{border-top-left-radius:calc(var(--r) - 1px)}#view[data-v] .tw:not(.card .tw) th:last-child{border-top-right-radius:calc(var(--r) - 1px)}
+#view[data-v] .card .tw th{background:var(--accent-soft);color:var(--accent-text);font-weight:600;border-bottom:1px solid var(--line)}
+
+/* Indicadores, filtros y productos con filo de color */
+.kpi{border-top:3px solid var(--accent)!important}.kpi.bad{border-top-color:var(--bad)!important}.kpi.warn{border-top-color:var(--warn)!important}.kpi.good{border-top-color:var(--good)!important}
+.card:has(>.filters){border-top:3px solid var(--accent)}
+.tile:not(.out){border-top:3px solid var(--accent)}
+.ccstrip{background:var(--accent-soft);border-color:#c3d6cb}
+/* listas de renglones (compras, clientes, proveedores, gastos): en tarjeta con filo verde */
+.filas{background:var(--surface);border:1px solid var(--line);border-top:3px solid var(--accent);border-radius:var(--r);box-shadow:var(--sh-1);overflow:hidden}
+.filas .fila{padding-left:14px;padding-right:14px}.filas .fila:last-child{border-bottom:0}
+.filas .fila.click:hover{background:var(--accent-soft)}

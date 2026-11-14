@@ -1,7 +1,7 @@
 /* Interfaz: ayudantes, modales, navegación, Panel, Ventas (punto de venta) y Caja. */
 'use strict';
 const UI={vista:'panel',ventasTab:'vender',invTab:null,compTab:'lista',provTab:'prov',
-  f:{prod:{q:'',cat:'',prov:'',ver:'',est:'activos'},hist:{q:'',desde:'',hasta:''},mov:{q:'',tipo:'',desde:''},comp:{q:'',desde:''},cli:{q:'',ver:'activos'},gas:{q:'',desde:''},pos:{q:'',cat:''},pre:{q:'',ver:''},ccv:{q:'',ver:'saldo'}},
+  f:{prod:{q:'',cat:'',prov:'',ver:'',est:'activos'},hist:{q:'',desde:'',hasta:'',pag:1},mov:{q:'',tipo:'',desde:''},comp:{q:'',desde:''},cli:{q:'',ver:'activos'},gas:{q:'',desde:''},pos:{q:'',cat:''},pre:{q:'',ver:''},ccv:{q:'',ver:'saldo'}},
   caja:{fecha:null},rep:{per:'mes',desde:'',hasta:''},cc:{id:null,per:'0'},cart:{items:[],clienteId:'',medio:'Efectivo',recibido:'',descPct:''}};
 const ACT={},FILL={},LIVE={},CHG={},VIEWS={},AFTER={}; let _raf=0;
 const gp=p=>p.split('.').reduce((o,k)=>o[k],UI);
@@ -118,10 +118,9 @@ const NAV=[['#','Inicio'],['panel','Panel','<rect x="3" y="3" width="7" height="
 function conteos(){ const lv=S.config.venc?S.lotes.filter(l=>l.cant>0&&l.vence&&difDias(l.vence,hoy())<=S.config.diasVence).length:0;
   const sb=S.productos.filter(p=>p.activo&&stockDe(p.id)<=p.minimo).length; return {inventario:lv,productos:sb}; }
 function navHtml(){ const c=conteos(); return NAV.map(([k,t,ic])=>k==='#'?`<div class="grp">${t}</div>`:`<a href="#${k}" class="${UI.vista===k?'on':''}" ${UI.vista===k?'aria-current="page"':''}><svg viewBox="0 0 24 24" aria-hidden="true">${ic}</svg>${t}${c[k]?`<span class="cnt">${c[k]}</span>`:''}</a>`).join(''); }
-const GESTIA_MARK='<svg viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="15" fill="#183C36"/><g stroke="#477D6A" stroke-width="2.6" stroke-linecap="round"><line x1="35.6" y1="35.6" x2="20.6" y2="29.1"/><line x1="20.6" y1="29.1" x2="17.4" y2="16"/><line x1="35.6" y1="35.6" x2="38.9" y2="20.2"/><line x1="35.6" y1="35.6" x2="51.5" y2="31.9"/><line x1="35.6" y1="35.6" x2="23.4" y2="45.9"/><line x1="23.4" y1="45.9" x2="10.8" y2="44.1"/></g><circle cx="35.6" cy="35.6" r="4.5" fill="#A8D8BF"/><circle cx="20.6" cy="29.1" r="3.6" fill="#fff"/><circle cx="17.4" cy="16" r="2.8" fill="#A8D8BF"/><circle cx="38.9" cy="20.2" r="3" fill="#7FB39E"/><circle cx="51.5" cy="31.9" r="4.5" fill="#fff"/><circle cx="23.4" cy="45.9" r="4.9" fill="#7FB39E"/><circle cx="10.8" cy="44.1" r="2.8" fill="#A8D8BF"/></svg>';
 function iniciales(n){ return String(n||'?').trim().split(/\s+/).slice(0,2).map(w=>w[0]).join('').toUpperCase(); }
 function pintarMarco(){ const c=S.config;
-  $('#side').innerHTML=`<div class="brand">${GESTIA_MARK}<b>gestia</b></div><div class="biz">${c.logo?`<img src="${esc(c.logo)}" alt="">`:`<span class="ini">${esc(iniciales(c.nombre))}</span>`}<div><b>${esc(c.nombre||'Mi negocio')}</b><small>${esc(c.sub||c.rubro||'')}</small></div></div><button class="qkbtn" data-act="rapido" aria-keyshortcuts="Control+K">${SVG(LUPA_D)}<span>Buscar o ir a…</span><kbd>Ctrl K</kbd></button><nav class="nav" id="nav" aria-label="Secciones">${navHtml()}</nav><div class="sidefoot" id="sf"></div>`;
+  $('#side').innerHTML=`<div class="biz">${c.logo?`<img src="${esc(c.logo)}" alt="">`:`<span class="ini">${esc(iniciales(c.nombre))}</span>`}<div><b>${esc(c.nombre||'Mi negocio')}</b><small>${esc(c.sub||c.rubro||'')}</small></div></div><nav class="nav" id="nav" aria-label="Secciones">${navHtml()}</nav><div class="sidefoot" id="sf"></div>`;
   document.title=(c.nombre?c.nombre+' · ':'')+'Gestia'; }
 function ir(v,extra){ UI.vista=v; if(extra&&extra.tab){ if(v==='ventas') UI.ventasTab=extra.tab; if(v==='inventario') UI.invTab=extra.tab; if(v==='compras') UI.compTab=extra.tab; if(v==='proveedores') UI.provTab=extra.tab; }
   if(extra&&extra.ver&&v==='productos') UI.f.prod.ver=extra.ver; if(location.hash!=='#'+v) location.hash=v; else render(); }
@@ -161,16 +160,18 @@ VIEWS.panel=function(){
   if(porCobrar>0) al.push(['info',`<b>${money(porCobrar)}</b> por cobrar en cuenta corriente`,'clientes','','Ver clientes']);
   const rb=S.config.ultimoRespaldo; if(!S.config.demo&&(!rb||difDias(h,rb)>7)) al.push(['warn',`<b>Hacé un respaldo.</b> Tus datos viven en este navegador${rb?` y el último respaldo fue el ${fechaTxt(rb)}`:' y todavía no hiciste ninguno'}.`,'ajustes','','Respaldar']);
   // gráfico 14 días
-  const dias=[];for(let i=13;i>=0;i--){ const f=addDias(h,-i); dias.push({f,t:ventasValidas(f,f).reduce((a,v)=>a+v.total,0)}); } const mx=Math.max(1,...dias.map(d=>d.t));
+  const dias=[];for(let i=13;i>=0;i--){ const f=addDias(h,-i), vd=ventasValidas(f,f); dias.push({f,n:vd.length,t:vd.reduce((a,v)=>a+v.total,0)}); } const mx=Math.max(1,...dias.map(d=>d.t));
   const top=reporte(mes,h).prods.sort((a,b)=>b.ing-a.ing).slice(0,6); const mt=Math.max(1,...top.map(t=>t.ing)); const st=top.reduce((a,t)=>a+t.ing,0); const pct=v=>Math.round(v/Math.max(1,rm.ingresos)*100)+'%';
   const DS=['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'], dsem=f=>DS[new Date(f+'T12:00').getDay()];
+  // texto del panel izquierdo para cada día del gráfico (el último es hoy)
+  window.HOY_DIAS=dias.map((d,i)=>hoyNHtml(i===dias.length-1?'Vendiste hoy':'Vendiste el '+dsem(d.f)+' '+d.f.slice(8)+'/'+d.f.slice(5,7),d.t,d.n));
   const fechaLarga=(()=>{const t=new Date(h+'T12:00').toLocaleDateString('es-AR',{weekday:'long',day:'numeric',month:'long'}).replace(',','');return t.charAt(0).toUpperCase()+t.slice(1);})();
   const rep=S.productos.filter(p=>p.activo&&stockDe(p.id)<=p.minimo).map(p=>({p,s:sugerido(p)})).sort((a,b)=>stockDe(a.p.id)/Math.max(a.p.minimo,1)-stockDe(b.p.id)/Math.max(b.p.minimo,1)); const repV=rep.slice(0,6);
   const d30=[];for(let i=29;i>=0;i--){ const f=addDias(h,-i); d30.push(ventasValidas(f,f).reduce((a,v)=>a+v.total,0)); }
   const saludo=(()=>{const hh=new Date().getHours();return hh<12?'Buen día':hh<20?'Buenas tardes':'Buenas noches';})();
   return `${S.config.demo?`<div class="demo"><span>Estás viendo <b>datos de ejemplo</b>. Probá todo con tranquilidad.</span><button class="btn sm" data-act="go" data-v="ajustes">Empezar con mis datos</button></div>`:''}
   ${encab(fechaLarga,"",`<button class="btn pri" data-act="go" data-v="ventas">Nueva venta</button>`)}
-  <section class="hoy" aria-label="Ventas de hoy"><div class="hoy-n"><span class="k">Vendiste hoy</span><div class="big">${money(rh.ingresos)}</div><div class="d">${rh.vs.length} venta${rh.vs.length===1?"":"s"}${rh.vs.length?` · ticket promedio <b>${money(rh.ingresos/rh.vs.length)}</b>`:""}</div></div><div class="hoy-g"><span class="k">Últimos 14 días</span><div class="bars" role="img" aria-label="Ventas por día">${dias.map((d,i)=>{const hy=i===dias.length-1, w=hy?'Hoy':dsem(d.f), ht=Math.max(2,d.t/mx*100); return `<div class="col" tabindex="0" style="--h:${ht}%" aria-label="${w} ${fechaTxt(d.f)}: ${money(d.t)}"><div class="tip">${w} ${d.f.slice(8)}/${d.f.slice(5,7)}<b>${money(d.t)}</b></div><div class="bar1" style="height:${ht}%"></div><div class="lb"><span class="wd${/^(Sáb|Dom)$/.test(w)?' fin':''}">${w}</span><span>${d.f.slice(8)}</span></div></div>`;}).join('')}</div></div></section>
+  <section class="hoy" aria-label="Ventas de hoy"><div class="hoy-n" id="hoyn" aria-live="polite">${window.HOY_DIAS[dias.length-1]}</div><div class="hoy-g"><span class="k">Últimos 14 días</span><div class="bars" role="img" aria-label="Ventas por día">${dias.map((d,i)=>{const hy=i===dias.length-1, w=hy?'Hoy':dsem(d.f), ht=Math.max(2,d.t/mx*100); return `<div class="col" tabindex="0" role="button" aria-pressed="false" data-i="${i}" style="--h:${ht}%" aria-label="${w} ${fechaTxt(d.f)}: ${money(d.t)}"><div class="bar1" style="height:${ht}%"></div><div class="lb"><span class="wd${/^(Sáb|Dom)$/.test(w)?' fin':''}">${w}</span><span>${d.f.slice(8)}</span></div></div>`;}).join('')}</div></div></section>
   <div class="kpis">
    <div class="kpi"><div class="k">Ventas, últimos 30 días</div><div class="v">${money(rm.ingresos)}</div>${spark(d30)}<div class="d">${rm.vs.length} ventas ${delta(rm.ingresos,ra.ingresos,"vs. 30 días anteriores",false,addDias(mes,-30))}</div></div>
    <div class="kpi ${rm.neto>=0?'good':'bad'}"><div class="k">Resultado, 30 días</div><div class="v">${money(rm.neto)}</div><div class="d">${delta(rm.neto,ra.neto,"vs. 30 días anteriores",false,addDias(mes,-30))||"después de gastos y mermas"}</div></div>
@@ -180,6 +181,15 @@ VIEWS.panel=function(){
    <div class="card"><h2>Más vendidos, últimos 30 días</h2>${top.length?`<div class="tv">${top.map((t,i)=>`<div class="r" title="${esc(t.nombre)}"><div class="n">${i+1}</div><div class="nm">${esc(t.nombre)}</div><div class="am">${money(t.ing)}</div><div class="ln"><div class="tr"><div class="fl" style="width:${t.ing/mt*100}%"></div></div><span class="pc">${pct(t.ing)}</span></div></div>`).join('')}<div class="ft">Estos ${top.length} productos son el <b>${pct(st)}</b> de lo vendido en 30 días.</div></div>`:vacioHtml('Todavía no hay ventas en los últimos 30 días.')}</div></div>
   <div class="card"><div class="chd"><h2>Para reponer${sin.length?`<span class="tag-bad">● ${sin.length} sin stock</span>`:''}</h2>${rep.length?`<button class="btn sm pri" data-act="go" data-v="compras" data-tab="pedido">Armar pedido</button>`:''}</div>${rep.length?`<div class="tw"><table><thead><tr><th>Producto</th><th class="n">Stock</th><th class="n">Mínimo</th><th class="n">Sugerido</th></tr></thead><tbody>${repV.map(r=>`<tr><td>${esc(r.p.nombre)}</td><td class="n ${stockDe(r.p.id)<=0?'dn b':''}">${qtyTxt(r.p,stockDe(r.p.id))}</td><td class="n">${qtyTxt(r.p,r.p.minimo)}</td><td class="n b">${qtyTxt(r.p,r.s)}</td></tr>`).join('')}</tbody></table></div>${rep.length>repV.length?`<button class="lnk" data-act="go" data-v="compras" data-tab="pedido">y ${rep.length-repV.length} más → ver todos</button>`:''}`:vacioHtml('Nada para reponer por ahora.')}</div>`;
 };
+
+/* Gráfico de 14 días: al apretar una barra, el panel de la izquierda muestra ese día (apretarla de nuevo, o Esc, vuelve a «hoy») */
+function hoyNHtml(k,t,n){ return `<span class="k">${k}</span><div class="big">${money(t)}</div><div class="d">${n} venta${n===1?'':'s'}${n?` · ticket promedio <b>${money(t/n)}</b>`:''}</div>`; }
+function hoyMostrar(i){ const n=$('#hoyn'), L=window.HOY_DIAS; if(!n||!L||L[i]==null) return; n.dataset.i=i; n.innerHTML=L[i];
+  document.querySelectorAll('.hoy .bars .col').forEach(c=>{ const on=+c.dataset.i===i&&i!==L.length-1; c.classList.toggle('sel',on); c.setAttribute('aria-pressed',on?'true':'false'); }); }
+(function(){ const col=t=>t&&t.closest&&t.closest('.hoy .bars .col');
+  document.addEventListener('click',e=>{ const c=col(e.target); if(!c) return; const L=window.HOY_DIAS, i=+c.dataset.i, n=$('#hoyn'); if(!L||!n) return;
+    hoyMostrar(n.dataset.i===String(i)&&i!==L.length-1?L.length-1:i); }); // apretar de nuevo la misma barra vuelve a «hoy»
+  document.addEventListener('keydown',e=>{ const c=col(e.target); if(c&&(e.key==='Enter'||e.key===' ')){ e.preventDefault(); c.click(); } else if(e.key==='Escape'&&window.HOY_DIAS&&$('#hoyn')) hoyMostrar(window.HOY_DIAS.length-1); }); })();
 
 /* ================= VENTAS ================= */
 const POSCATS=()=>cats();
@@ -202,15 +212,39 @@ VIEWS.ventas=function(){
    <div class="card cart" id="cart"></div></div>`;
 };
 ACT['ccv-ver']=el=>{ UI.f.ccv.ver=el.dataset.v; document.querySelectorAll('.seg [data-act="ccv-ver"]').forEach(b=>b.classList.toggle('on',b===el)); FILL.ventas(); };
-ACT['tab-ventas']=el=>{ UI.ventasTab=el.dataset.t; render(); };
+ACT['tab-ventas']=el=>{ UI.ventasTab=el.dataset.t; UI.f.hist.pag=1; render(); };
 ACT['pos-cat']=el=>{ UI.f.pos.cat=el.dataset.c; render(); };
 function posLista(){ const f=UI.f.pos; const q=f.q.trim().toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'');
   return S.productos.filter(p=>p.activo&&(!f.cat||p.categoria===f.cat)&&(!q||p.nombre.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').includes(q)||p.codigo.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').includes(q)||(p.barras&&p.barras.includes(q))||(p.plu&&String(p.plu)===q))); }
+/* Paginado reutilizable: «Mostrando 21–40 de 135 ventas» + Anterior / números / Siguiente */
+let PAG_HIST=12, _pagN=0; // filas por página: se ajusta al alto de la pantalla (ver histAjustar)
+function paginador(act,cur,tp,total,por,sing,plur){
+  if(total<=por) return `<div class="pager"><span class="sm muted">${total} ${total===1?sing:plur}</span></div>`;
+  const a=(cur-1)*por+1, b=Math.min(total,cur*por); const nums=[]; const cerca=n=>n===1||n===tp||Math.abs(n-cur)<=1;
+  for(let n=1,ult=0;n<=tp;n++){ if(!cerca(n)) continue; if(ult&&n-ult>1) nums.push(n-ult===2?n-1:'…'); nums.push(n); ult=n; }
+  const bt=(p,t,al,dis)=>`<button class="pg" type="button" data-act="${act}" data-p="${p}" ${dis?'disabled':''} aria-label="${al}">${t}</button>`;
+  return `<nav class="pager" aria-label="Paginado">
+    <span class="sm muted pgi">Mostrando ${a}–${b} de ${total} ${plur}</span>
+    <div class="pgb">${bt(cur-1,'‹ <span class="pgt">Anterior</span>','Página anterior',cur<=1)}
+      <span class="pgn">${nums.map(n=>n==='…'?'<span class="gap" aria-hidden="true">…</span>':`<button class="pg ${n===cur?'on':''}" type="button" data-act="${act}" data-p="${n}" ${n===cur?'aria-current="page"':''} aria-label="Página ${n}">${n}</button>`).join('')}</span>
+      <span class="pgm sm muted">${cur} de ${tp}</span>
+      ${bt(cur+1,'<span class="pgt">Siguiente</span> ›','Página siguiente',cur>=tp)}</div></nav>`; }
+ACT['hist-pag']=el=>{ const f=UI.f.hist; f.pag=+el.dataset.p||1; FILL.ventas(); };
+// Cuántas filas entran en lo que queda de pantalla para que la lista y el paginado se vean sin bajar con la barra lateral (en el celular, 10).
+function histAjustar(){ const r=$('#res'); if(!r||UI.vista!=='ventas'||UI.ventasTab!=='historial') return;
+  let n=10; if(innerWidth>860){ const top=r.getBoundingClientRect().top+scrollY, fila=r.querySelector('tbody tr'), rh=fila?fila.offsetHeight:46, th=(r.querySelector('thead')||{offsetHeight:44}).offsetHeight;
+    n=Math.max(5,Math.floor((innerHeight-top-th-64-20)/rh)); }
+  if(n===PAG_HIST||_pagN>=2){ _pagN=0; return; } _pagN++;
+  const f=UI.f.hist; f.pag=Math.floor(((f.pag-1)*PAG_HIST)/n)+1; PAG_HIST=n; FILL.ventas(); }
+addEventListener('resize',()=>{ if(UI.vista==='ventas'&&UI.ventasTab==='historial'){ _pagN=0; clearTimeout(histAjustar._t); histAjustar._t=setTimeout(()=>FILL.ventas(),120); } });
 FILL.ventas=function(){ const r=$('#res'); if(!r) return;
   if(UI.ventasTab==='cc'){ r.innerHTML=ccVentasHtml(); return; }
   if(UI.ventasTab==='historial'){ const f=UI.f.hist; const q=f.q.trim().toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'');
-    const l=S.ventas.filter(v=>(!f.desde||v.fecha>=f.desde)&&(!f.hasta||v.fecha<=f.hasta)&&(!q||('#'+v.id).includes(q)||String(v.id)===q||cliNom(v.clienteId).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').includes(q)||v.medio.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').includes(q))).sort((a,b)=>b.id-a.id).slice(0,300);
-    r.innerHTML=l.length?`<div class="tw"><table><thead><tr><th>N°</th><th>Fecha</th><th>Cliente</th><th class="n">Ítems</th><th>Pago</th><th class="n">Total</th><th>Estado</th></tr></thead><tbody>${l.map(v=>`<tr class="click ${v.estado==='Anulada'?'off':''}" data-act="venta-ver" data-id="${v.id}"><td>#${v.id}</td><td>${fechaTxt(v.fecha)} ${v.hora||''}</td><td>${esc(cliNom(v.clienteId))}</td><td class="n">${v.sinDetalle?pill('mute','sin detalle'):v.items.length}</td><td>${esc(v.medio)}${v.comprobante||v.operacion?` <span title="Con comprobante" style="color:var(--muted)">${typeof CLIP!=='undefined'?CLIP:''}</span>`:''}</td><td class="n b">${money(v.total)}</td><td>${v.estado==='Anulada'?pill('bad','Anulada'):pill('good','Registrada')}</td></tr>`).join('')}</tbody></table></div>`:vacioHtml('No hay ventas con esos filtros.'); return; }
+    const sg=[f.q,f.desde,f.hasta].join('|'); if(f._sg!==sg){ f._sg=sg; f.pag=1; } // si cambia un filtro, vuelve a la primera página
+    const todas=S.ventas.filter(v=>(!f.desde||v.fecha>=f.desde)&&(!f.hasta||v.fecha<=f.hasta)&&(!q||('#'+v.id).includes(q)||String(v.id)===q||cliNom(v.clienteId).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').includes(q)||v.medio.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').includes(q))).sort((a,b)=>b.id-a.id);
+    const tp=Math.max(1,Math.ceil(todas.length/PAG_HIST)); f.pag=Math.min(Math.max(1,f.pag||1),tp);
+    const l=todas.slice((f.pag-1)*PAG_HIST,f.pag*PAG_HIST);
+    r.innerHTML=l.length?`<div class="tw"><table><thead><tr><th>N°</th><th>Fecha</th><th>Cliente</th><th class="n">Ítems</th><th>Pago</th><th class="n">Total</th><th>Estado</th></tr></thead><tbody>${l.map(v=>`<tr class="click ${v.estado==='Anulada'?'off':''}" data-act="venta-ver" data-id="${v.id}"><td>#${v.id}</td><td>${fechaTxt(v.fecha)} ${v.hora||''}</td><td>${esc(cliNom(v.clienteId))}</td><td class="n">${v.sinDetalle?pill('mute','sin detalle'):v.items.length}</td><td>${esc(v.medio)}${v.comprobante||v.operacion?` <span title="Con comprobante" style="color:var(--muted)">${typeof CLIP!=='undefined'?CLIP:''}</span>`:''}</td><td class="n b">${money(v.total)}</td><td>${v.estado==='Anulada'?pill('bad','Anulada'):pill('good','Registrada')}</td></tr>`).join('')}</tbody></table></div>${paginador('hist-pag',f.pag,tp,todas.length,PAG_HIST,'venta','ventas')}`:vacioHtml('No hay ventas con esos filtros.'); histAjustar(); return; }
   const l=posLista().slice(0,80).sort((a,b)=>(stockDe(a.id)<=0)-(stockDe(b.id)<=0)); // los agotados van al final
   r.innerHTML=l.length?`<div class="tiles">${l.map(p=>{ const s=stockDe(p.id); return s<=0
     ?`<button class="tile out" data-act="pos-add" data-id="${p.id}"><span class="bdg">Agotado</span><span class="nm">${esc(p.nombre)}</span><span class="pr">${money(p.precio)}${p.unidad==='kg'?'<small> / kg</small>':''}</span><span class="st">Sin stock</span></button>`
@@ -344,17 +378,16 @@ VIEWS.caja=function(){
   return `${encab('Caja','',`<label class="ccper">Día <input type="date" id="cjf" value="${f}" data-chg="caja-fecha"></label>`)}
   <section class="hoy cajon" aria-label="Efectivo en el cajón"><div class="hoy-n"><span class="k">Debería haber en el cajón</span><div class="big">${money(r.esperado)}</div><div class="d">${cj?`Cerrada · contado <b>${money(cj.contado)}</b> · diferencia <b>${money(cj.dif)}</b>`:'Caja abierta, todavía sin cerrar'}</div></div>
    <div class="hoy-g"><span class="k">Ventas del día · ${money(r.totalVentas)} en ${r.vs.length} venta${r.vs.length===1?'':'s'}</span><div class="medios">${MEDIOS.filter(m=>r.por[m]>0).map(m=>`<div class="hb"><span>${m}</span><div class="tr"><div class="fl" style="width:${r.por[m]/Math.max(1,r.totalVentas)*100}%"></div></div><b>${money(r.por[m])}</b></div>`).join('')||'<p class="d">Todavía no hay ventas este día.</p>'}</div></div></section>
-  <div class="grid g21"><div class="card planilla"><h2>Planilla de efectivo</h2><div class="tw"><table><tbody>
+  <div class="grid g21"><div class="card planilla"><div class="chd"><h2>Planilla de efectivo</h2><div class="bar"><button class="btn sm" data-act="caja-mov" data-t="Retiro">Registrar retiro</button><button class="btn sm" data-act="caja-mov" data-t="Ingreso">Registrar ingreso</button></div></div><div class="tw"><table><thead><tr><th>Concepto</th><th class="n">Importe</th></tr></thead><tbody>
     <tr><td>Apertura${r.sinCerrar.length?`<div class="sm muted">Incluye ${r.sinCerrar.length===1?'el '+fechaTxt(r.sinCerrar[0])+', que quedó sin cerrar':r.sinCerrar.length+' días que quedaron sin cerrar'}</div>`:''}</td><td class="n">${money(r.apertura)}</td></tr><tr><td>Ventas en efectivo</td><td class="n">${money(efectivoTotal)}</td></tr><tr><td>Cobros de cuenta corriente en efectivo</td><td class="n">${money(r.cobEf)}</td></tr>
     <tr><td>Ingresos manuales</td><td class="n">${money(r.ing)}</td></tr><tr class="sale"><td>Retiros</td><td class="n">− ${money(r.ret)}</td></tr><tr class="sale"><td>Gastos pagados en efectivo</td><td class="n">− ${money(r.gEf)}</td></tr><tr class="sale"><td>Compras pagadas en efectivo</td><td class="n">− ${money(r.cEf)}</td></tr>
     <tr class="tot"><td>Efectivo esperado</td><td class="n">${money(r.esperado)}</td></tr></tbody></table></div>
-    <div class="bar mt12"><button class="btn" data-act="caja-mov" data-t="Retiro">Registrar retiro</button><button class="btn" data-act="caja-mov" data-t="Ingreso">Registrar ingreso</button></div>
     ${r.movs.length?`<div class="cmovs">${r.movs.map(m=>`<div><span>${m.tipo}: <b>${money(m.monto)}</b>${m.motivo?' · '+esc(m.motivo):''}</span><button class="btn sm ghost" data-act="caja-mov-del" data-id="${m.id}" title="Borrar" aria-label="Borrar ${m.tipo.toLowerCase()} de ${money(m.monto)}">✕</button></div>`).join('')}</div>`:''}</div>
   <div class="card arqueo"><h2>${cj?'Cierre guardado':'Arqueo y cierre'}</h2><p class="sm muted mt0">Contá el cajón y escribí el total. La diferencia aparece al instante.</p><div class="frm"><label class="field">Efectivo con el que se abrió<input id="cj_ap" value="${fnum(r.apertura)}" inputmode="decimal"></label>
    <label class="field">Efectivo contado ahora<input id="cj_con" value="${cj?fnum(cj.contado):''}" inputmode="decimal" placeholder="Contá el cajón" data-live="caja-dif"></label>
    <label class="field full">Notas<input id="cj_nota" value="${esc(cj?cj.notas:'')}" placeholder="Opcional"></label></div>
    <div class="sm mt8" id="cj_dif"></div><div class="bar mt12"><button class="btn pri" data-act="caja-cerrar">${cj?'Actualizar cierre':'Cerrar caja'}</button></div><p class="sm muted">La cuenta corriente es plata que todavía no entró. No suma al efectivo.</p></div></div>
-  ${hist.length?`<div class="card"><h2>Últimos cierres</h2><div class="tw"><table><thead><tr><th>Día</th><th class="n">Apertura</th><th class="n">Esperado</th><th class="n">Contado</th><th class="n">Diferencia</th><th>Notas</th></tr></thead><tbody>${hist.map(c=>`<tr><td>${fechaTxt(c.fecha)}</td><td class="n">${money(c.apertura)}</td><td class="n">${money(c.esperado)}</td><td class="n">${money(c.contado)}</td><td class="n ${c.dif<0?'dn':c.dif>0?'up':''} b">${money(c.dif)}</td><td>${esc(c.notas||'')}</td></tr>`).join('')}</tbody></table></div></div>`:''}`;
+  ${hist.length?`<div class="card cierres"><div class="chd"><h2>Últimos cierres</h2></div><div class="tw"><table><thead><tr><th>Día</th><th class="n">Apertura</th><th class="n">Esperado</th><th class="n">Contado</th><th class="n">Diferencia</th><th>Notas</th></tr></thead><tbody>${hist.map(c=>`<tr><td>${fechaTxt(c.fecha)}</td><td class="n">${money(c.apertura)}</td><td class="n">${money(c.esperado)}</td><td class="n">${money(c.contado)}</td><td class="n ${c.dif<0?'dn':c.dif>0?'up':''} b">${money(c.dif)}</td><td>${esc(c.notas||'')}</td></tr>`).join('')}</tbody></table></div></div>`:''}`;
 };
 CHG['caja-fecha']=el=>{ if(el.value){ UI.caja.fecha=el.value; render(); } };
 LIVE['caja-dif']=el=>{ const f=UI.caja.fecha; const r=resumenCaja(f); const ap=num($('#cj_ap').value)||0; const esp=r2(r.esperado-r.apertura+ap); const c=num(el.value); const d=$('#cj_dif'); if(!d) return;
@@ -375,11 +408,12 @@ const calIso=(y,m,d)=>y+'-'+String(m+1).padStart(2,'0')+'-'+String(d).padStart(2
 function calAbrir(el){ calCerrar(); CAL.el=el; const v=el.value||hoy(); CAL.y=+v.slice(0,4); CAL.m=+v.slice(5,7)-1;
   const b=document.createElement('div'); b.className='cal'; b.setAttribute('role','dialog'); b.setAttribute('aria-label','Elegir fecha'); document.body.appendChild(b); CAL.box=b; calPintar(); calUbicar(); }
 function calUbicar(){ const r=CAL.el.getBoundingClientRect(), b=CAL.box, w=b.offsetWidth, h=b.offsetHeight;
-  let top=r.bottom+6, left=Math.min(r.left, innerWidth-w-8); if(top+h>innerHeight-8&&r.top-h-6>8) top=r.top-h-6;
+  const vw=document.documentElement.clientWidth, vh=document.documentElement.clientHeight; // sin la barra de scroll: con innerWidth el calendario se pasaba y aparecía la barra horizontal
+  let top=r.bottom+6, left=Math.min(r.left, vw-w-8); if(top+h>vh-8&&r.top-h-6>8) top=r.top-h-6;
   b.style.top=(top+scrollY)+'px'; b.style.left=Math.max(8,left)+scrollX+'px'; }
 function calPintar(){ const {y,m}=CAL, sel=CAL.el.value, h=hoy(); const ini=(new Date(y,m,1).getDay()+6)%7, dias=new Date(y,m+1,0).getDate();
   let cs=''; for(let i=0;i<ini;i++) cs+='<span></span>';
-  for(let d=1;d<=dias;d++){ const f=calIso(y,m,d); cs+=`<button type="button" data-cal-d="${f}" class="${f===sel?'sel':''} ${f===h?'hoy':''}">${d}</button>`; }
+  for(let d=1;d<=dias;d++){ const f=calIso(y,m,d); cs+=`<button type="button" data-cal-d="${f}" class="${f===sel?'sel':''} ${f===h?'es-hoy':''}">${d}</button>`; }
   CAL.box.innerHTML=`<div class="calh"><button type="button" data-cal-m="-1" aria-label="Mes anterior">‹</button><b>${CAL_MESES[m]} ${y}</b><button type="button" data-cal-m="1" aria-label="Mes siguiente">›</button></div>
    <div class="calw">${['Lu','Ma','Mi','Ju','Vi','Sá','Do'].map(x=>`<span>${x}</span>`).join('')}</div><div class="cald">${cs}</div>
    <div class="calf"><button type="button" data-cal-x="">Borrar</button><button type="button" data-cal-x="hoy">Hoy</button></div>`; }
@@ -400,8 +434,8 @@ const SEL={el:null,box:null};
 function selAbrir(el){ selCerrar(); SEL.el=el; const b=document.createElement('div'); b.className='selm'; b.setAttribute('role','listbox');
   b.innerHTML=[...el.options].map((o,i)=>`<button type="button" role="option" data-sel-i="${i}" class="${o.selected?'on':''}" ${o.disabled?'disabled':''}>${esc(o.text)}</button>`).join('');
   document.body.appendChild(b); SEL.box=b; const r=el.getBoundingClientRect(); b.style.minWidth=r.width+'px';
-  const h=b.offsetHeight, w=b.offsetWidth; let top=r.bottom+4; if(top+h>innerHeight-8&&r.top-h-4>8) top=r.top-h-4;
-  b.style.top=(top+scrollY)+'px'; b.style.left=Math.max(8,Math.min(r.left,innerWidth-w-8))+scrollX+'px';
+  const h=b.offsetHeight, w=b.offsetWidth; const vw=document.documentElement.clientWidth, vh=document.documentElement.clientHeight; let top=r.bottom+4; if(top+h>vh-8&&r.top-h-4>8) top=r.top-h-4;
+  b.style.top=(top+scrollY)+'px'; b.style.left=Math.max(8,Math.min(r.left,vw-w-8))+scrollX+'px';
   const on=b.querySelector('.on'); if(on) on.scrollIntoView({block:'nearest'}); }
 function selCerrar(){ if(SEL.box) SEL.box.remove(); SEL.box=null; SEL.el=null; }
 document.addEventListener('mousedown',e=>{ const t=e.target;

@@ -188,12 +188,12 @@ Piezas compartidas en `ui.js` y `styles.css`. Antes de armar una pantalla nueva,
 
 ## 10. Navegación
 
-- **Computadora**: barra lateral `--side` con logo, negocio (`.biz`), grupos (Inicio, Vender, Stock, Gestión, Sistema) y pie con estado del respaldo. Activo: fondo blanco translúcido + ícono `--mint`. Contadores rojos para alertas.
+- **Computadora**: barra lateral `--side` con negocio (`.biz`), grupos (Inicio, Vender, Stock, Gestión, Sistema) y pie con estado del respaldo. Activo: fondo blanco translúcido + ícono `--mint`. Contadores rojos para alertas.
 - **Celular (≤860px)**: barra superior con logo y botón de menú (abre la misma barra lateral como cajón) + **barra inferior** con 5 accesos (`.bnav`). En Ventas, `.cartbar` flotante con el total.
 - **Pestañas** `.tabs` / `.tabbar`: subrayado `--accent` en la activa.
 - **Segmentos** `.seg`: filtro de 3 opciones (activo blanco con anillo verde).
 - **Chips** `.chips`: filtros por categoría.
-- **Buscador rápido** (`Ctrl K` / `⌘ K`, botón `.qkbtn` en la barra lateral): secciones, acciones (nueva venta, producto, cliente, proveedor, gasto), productos, clientes y proveedores. Flechas para moverse, Enter para abrir.
+- **Buscador rápido** (`Ctrl K` / `⌘ K`, solo con el teclado; no tiene botón en la barra lateral): secciones, acciones (nueva venta, producto, cliente, proveedor, gasto), productos, clientes y proveedores. Flechas para moverse, Enter para abrir.
 - **Atajos** (fuera de campos de texto): `N` nueva venta, `/` foco en el buscador de la pantalla, `Esc` cierra. Se muestran con `<kbd>`.
 - **Saltar al contenido**: botón `.skip`, primer elemento de la página, visible sólo con Tab.
 - **Panel**: portada del día (lo vendido hoy y 14 días), franja de indicadores, alertas y más vendidos, y al final "Para reponer". El título es la fecha, no un saludo.
@@ -202,7 +202,7 @@ Piezas compartidas en `ui.js` y `styles.css`. Antes de armar una pantalla nueva,
 
 - SVG en línea, **trazo** (no relleno), `stroke-width 1.8`, puntas redondeadas, viewBox 24. Tamaño 15–17px en la interfaz, 22px en la barra del celular.
 - Color: `currentColor` (heredan del texto); el ícono activo toma `--mint` o `--accent`.
-- Logo: red de nodos sobre cuadrado `#183C36` (`icon.svg`, `GESTIA_MARK` en `ui.js`, PNG 192/512).
+- Logo: red de nodos sobre cuadrado `#183C36` (`icon.svg`, repetido en el botón `.powered` de `index.html`, PNG 192/512).
 - No sumar librerías de íconos: seguir dibujando con el mismo estilo de trazo.
 
 ## 12. Estados visuales
@@ -246,3 +246,5 @@ Respetar `env(safe-area-inset-bottom)` en todo lo fijo abajo, y `prefers-reduced
 8. **Detalles del mostrador**: precios como etiqueta de góndola (`.tile .pr` con `/ kg` chico), ticket de papel, planilla de efectivo. Preferir el vocabulario del comercio a los patrones genéricos de panel.
 9. **Probar en claro, oscuro y 390px** antes de dar por terminado; correr `cd pruebas && npm test`.
 10. Si una herramienta de diseño sugiere otra paleta, tipografía o un `MASTER.md`, no se aplica sin acordarlo: este archivo manda.
+
+- **Botón «Powered by Gestia»** (`.powered`): píldora fija abajo a la derecha, como la insignia de Netlify. Reemplaza al logo de arriba a la izquierda. En celular sube para no tapar la barra de secciones ni la barra de la venta; no se imprime. El enlace está en `index.html` (`href` del `#powered`).
