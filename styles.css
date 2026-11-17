@@ -817,3 +817,33 @@ div[data-pf]:not(.provs):not(.tw):not(.filas){display:flow-root}
 .planilla tr.sale td{color:var(--ink)}.planilla tr.sale td.n{font-weight:650;color:var(--bad)}
 /* porcentaje de cada producto en «Más vendidos» */
 .tv .pc{font-size:12.5px;color:var(--ink);font-weight:650}
+
+
+/* ---------- Celular: sólo gestión a distancia (Inicio, Stock y Gestión) ---------- */
+@media (max-width:860px){
+  /* acciones que son de mostrador o de administración: se hacen en la compu, no desde el celular */
+  #view[data-v="productos"] .head .mnu,
+  #view[data-v="inventario"] [data-act="mov-nuevo"],
+  #view[data-v="inventario"] [data-act="tab-inv"][data-t="recuento"],
+  #view[data-v="compras"] [data-act="compra-nueva"],
+  #view[data-v="proveedores"] [data-act="precio-asignar"],
+  #view[data-v="clientes"] [data-act="cli-nuevo"],
+  #view[data-v="reportes"] [data-act="rep-csv"]{display:none}
+  /* el cuerpo no queda tapado por el botón flotante */
+  #view{padding-bottom:84px}
+}
+@media (max-width:640px){
+  /* Productos: una tarjeta corta (nombre, stock y precio) en vez de una lista larga de datos */
+  #view[data-v="productos"] table.tcards td[data-l="Proveedor"],
+  #view[data-v="productos"] table.tcards td[data-l="Costo"],
+  #view[data-v="productos"] table.tcards td[data-l="Margen"]{display:none}
+  /* Reportes: el ranking muestra los 5 primeros, con producto y ganancia */
+  #view[data-v="reportes"] table.tcards tbody tr:nth-child(n+6){display:none}
+  #view[data-v="reportes"] table.tcards td[data-l="Vendido"],
+  #view[data-v="reportes"] table.tcards td[data-l="Margen"]{display:none}
+}
+@media (max-width:640px){
+  /* Productos: de los 5 filtros quedan buscar, categoría y «ver» (stock bajo / sin stock); proveedor y estado quedan para la compu */
+  #view[data-v="productos"] .field:has([data-bind="f.prod.prov"]),
+  #view[data-v="productos"] .field:has([data-bind="f.prod.est"]){display:none}
+}

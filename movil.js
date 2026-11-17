@@ -2,7 +2,17 @@
    y barra con el total de la venta. Todo se arma sobre lo que ya dibujan las pantallas, sin cambiarlas. */
 'use strict';
 const MOV=matchMedia('(max-width:860px)');
-const BNAV=[['panel','Panel'],['ventas','Ventas'],['caja','Caja'],['productos','Productos']];
+// En el celular la app es sólo para gestionar a distancia: Inicio, Stock y Gestión. Sin Vender ni Ajustes.
+const BNAV=[['panel','Panel'],['productos','Productos'],['clientes','Clientes'],['reportes','Reportes']];
+const MOV_OK=['panel','productos','inventario','compras','proveedores','clientes','gastos','reportes'];
+const MOV_GRUPOS_FUERA=['Vender','Sistema'];
+function movilOculta(grupo){ return MOV.matches&&MOV_GRUPOS_FUERA.includes(grupo); }
+// si el celular llega a una sección que no existe acá (enlace guardado, #ventas, etc.) se lo lleva al Panel
+function movilGuardia(){ if(!MOV.matches) return;
+  if(!MOV_OK.includes(UI.vista)){ UI.vista='panel'; if(location.hash&&location.hash!=='#panel') history.replaceState(null,'',location.pathname+location.search+'#panel'); }
+  if(UI.invTab==='recuento') UI.invTab=(S&&S.config.venc)?'lotes':'mov'; }
+// al girar el aparato o cambiar el ancho se redibuja el menú y la pantalla con las secciones que corresponden
+MOV.addEventListener('change',()=>{ if(!S) return; menuAbrir(false); pintarMarco(); render(); });
 const ICO_MENU='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>';
 const navIco=k=>{ const n=NAV.find(x=>x[0]===k); return n?`<svg viewBox="0 0 24 24" aria-hidden="true">${n[2]}</svg>`:''; };
 

@@ -117,14 +117,14 @@ const NAV=[['#','Inicio'],['panel','Panel','<rect x="3" y="3" width="7" height="
  ['#','Sistema'],['ajustes','Ajustes','<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"/>']];
 function conteos(){ const lv=S.config.venc?S.lotes.filter(l=>l.cant>0&&l.vence&&difDias(l.vence,hoy())<=S.config.diasVence).length:0;
   const sb=S.productos.filter(p=>p.activo&&stockDe(p.id)<=p.minimo).length; return {inventario:lv,productos:sb}; }
-function navHtml(){ const c=conteos(); return NAV.map(([k,t,ic])=>k==='#'?`<div class="grp">${t}</div>`:`<a href="#${k}" class="${UI.vista===k?'on':''}" ${UI.vista===k?'aria-current="page"':''}><svg viewBox="0 0 24 24" aria-hidden="true">${ic}</svg>${t}${c[k]?`<span class="cnt">${c[k]}</span>`:''}</a>`).join(''); }
+function navHtml(){ const c=conteos(); let fuera=false; return NAV.map(([k,t,ic])=>{ if(k==='#'){ fuera=typeof movilOculta==='function'&&movilOculta(t); return fuera?'':`<div class="grp">${t}</div>`; } if(fuera) return ''; return `<a href="#${k}" class="${UI.vista===k?'on':''}" ${UI.vista===k?'aria-current="page"':''}><svg viewBox="0 0 24 24" aria-hidden="true">${ic}</svg>${t}${c[k]?`<span class="cnt">${c[k]}</span>`:''}</a>`; }).join(''); }
 function iniciales(n){ return String(n||'?').trim().split(/\s+/).slice(0,2).map(w=>w[0]).join('').toUpperCase(); }
 function pintarMarco(){ const c=S.config;
   $('#side').innerHTML=`<div class="biz">${c.logo?`<img src="${esc(c.logo)}" alt="">`:`<span class="ini">${esc(iniciales(c.nombre))}</span>`}<div><b>${esc(c.nombre||'Mi negocio')}</b><small>${esc(c.sub||c.rubro||'')}</small></div></div><nav class="nav" id="nav" aria-label="Secciones">${navHtml()}</nav><div class="sidefoot" id="sf"></div>`;
   document.title=(c.nombre?c.nombre+' · ':'')+'Gestia'; }
 function ir(v,extra){ UI.vista=v; if(extra&&extra.tab){ if(v==='ventas') UI.ventasTab=extra.tab; if(v==='inventario') UI.invTab=extra.tab; if(v==='compras') UI.compTab=extra.tab; if(v==='proveedores') UI.provTab=extra.tab; }
   if(extra&&extra.ver&&v==='productos') UI.f.prod.ver=extra.ver; if(location.hash!=='#'+v) location.hash=v; else render(); }
-function render(){ if(!S) return; const nav=$('#nav'); if(nav) nav.innerHTML=navHtml();
+function render(){ if(!S) return; if(typeof movilGuardia==='function') movilGuardia(); const nav=$('#nav'); if(nav) nav.innerHTML=navHtml();
   const sf=$('#sf'); if(sf){ const ur=S.config.ultimoRespaldo; sf.innerHTML=S.config.demo?'<span class="dot w"></span>Datos de ejemplo':(ur&&difDias(hoy(),ur)<=7?'<span class="dot"></span>Respaldo: '+fechaTxt(ur):'<span class="dot w"></span>'+(ur?'Respaldo: '+fechaTxt(ur):'Sin respaldo')); }
   const v=$('#view'); v.dataset.v=UI.vista; v.innerHTML=(VIEWS[UI.vista]||VIEWS.panel)(); if(AFTER[UI.vista]) AFTER[UI.vista](); window.scrollTo(0,0); }
 function refrescar(){ indexar(); const y=window.scrollY; const nav=$('#nav'); if(nav) nav.innerHTML=navHtml(); if(FILL[UI.vista]&&!['panel','caja','ajustes','reportes'].includes(UI.vista)) FILL[UI.vista](); else { const v=$('#view'); v.innerHTML=VIEWS[UI.vista](); if(AFTER[UI.vista]) AFTER[UI.vista](); } window.scrollTo(0,y); }
@@ -153,24 +153,25 @@ VIEWS.panel=function(){
   const lotesV=S.config.venc?S.lotes.filter(l=>l.cant>0&&l.vence):[]; const venc=lotesV.filter(l=>difDias(l.vence,hoy())<0), porv=lotesV.filter(l=>{const d=difDias(l.vence,hoy());return d>=0&&d<=S.config.diasVence;});
   const sin=S.productos.filter(p=>p.activo&&stockDe(p.id)<=0), bajo=S.productos.filter(p=>p.activo&&stockDe(p.id)>0&&stockDe(p.id)<=p.minimo);
   const viejos=S.productos.filter(p=>{ if(!p.activo) return false; const d=diasPrecio(p); return d!=null&&d>S.config.diasPrecio; });
+  const mv=typeof MOV!=='undefined'&&MOV.matches; // celular: sólo gestión a distancia (sin vender, sin ajustes)
   const al=[];
   if(venc.length) al.push(['bad',`<b>${venc.length} lote${venc.length>1?'s':''} vencido${venc.length>1?'s':''}</b> con stock: ${venc.slice(0,3).map(l=>esc((prod(l.productoId)||{}).nombre)).join(', ')}`,'inventario','lotes','Dar de baja']);
   if(porv.length) al.push(['warn',`<b>${porv.length} lote${porv.length>1?'s':''} por vencer</b> en ${S.config.diasVence} días o menos: ${porv.slice(0,3).map(l=>esc((prod(l.productoId)||{}).nombre)).join(', ')}`,'inventario','lotes','Ver']);
   if(viejos.length) al.push(['info',`<b>${viejos.length} precio${viejos.length>1?'s':''} sin actualizar</b> hace más de ${S.config.diasPrecio} días`,'productos','','Revisar']);
   if(porCobrar>0) al.push(['info',`<b>${money(porCobrar)}</b> por cobrar en cuenta corriente`,'clientes','','Ver clientes']);
-  const rb=S.config.ultimoRespaldo; if(!S.config.demo&&(!rb||difDias(h,rb)>7)) al.push(['warn',`<b>Hacé un respaldo.</b> Tus datos viven en este navegador${rb?` y el último respaldo fue el ${fechaTxt(rb)}`:' y todavía no hiciste ninguno'}.`,'ajustes','','Respaldar']);
+  const rb=S.config.ultimoRespaldo; if(!mv&&!S.config.demo&&(!rb||difDias(h,rb)>7)) al.push(['warn',`<b>Hacé un respaldo.</b> Tus datos viven en este navegador${rb?` y el último respaldo fue el ${fechaTxt(rb)}`:' y todavía no hiciste ninguno'}.`,'ajustes','','Respaldar']);
   // gráfico 14 días
   const dias=[];for(let i=13;i>=0;i--){ const f=addDias(h,-i), vd=ventasValidas(f,f); dias.push({f,n:vd.length,t:vd.reduce((a,v)=>a+v.total,0)}); } const mx=Math.max(1,...dias.map(d=>d.t));
-  const top=reporte(mes,h).prods.sort((a,b)=>b.ing-a.ing).slice(0,6); const mt=Math.max(1,...top.map(t=>t.ing)); const st=top.reduce((a,t)=>a+t.ing,0); const pct=v=>Math.round(v/Math.max(1,rm.ingresos)*100)+'%';
+  const top=reporte(mes,h).prods.sort((a,b)=>b.ing-a.ing).slice(0,mv?3:6); const mt=Math.max(1,...top.map(t=>t.ing)); const st=top.reduce((a,t)=>a+t.ing,0); const pct=v=>Math.round(v/Math.max(1,rm.ingresos)*100)+'%';
   const DS=['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'], dsem=f=>DS[new Date(f+'T12:00').getDay()];
   // texto del panel izquierdo para cada día del gráfico (el último es hoy)
   window.HOY_DIAS=dias.map((d,i)=>hoyNHtml(i===dias.length-1?'Vendiste hoy':'Vendiste el '+dsem(d.f)+' '+d.f.slice(8)+'/'+d.f.slice(5,7),d.t,d.n));
   const fechaLarga=(()=>{const t=new Date(h+'T12:00').toLocaleDateString('es-AR',{weekday:'long',day:'numeric',month:'long'}).replace(',','');return t.charAt(0).toUpperCase()+t.slice(1);})();
-  const rep=S.productos.filter(p=>p.activo&&stockDe(p.id)<=p.minimo).map(p=>({p,s:sugerido(p)})).sort((a,b)=>stockDe(a.p.id)/Math.max(a.p.minimo,1)-stockDe(b.p.id)/Math.max(b.p.minimo,1)); const repV=rep.slice(0,6);
+  const rep=S.productos.filter(p=>p.activo&&stockDe(p.id)<=p.minimo).map(p=>({p,s:sugerido(p)})).sort((a,b)=>stockDe(a.p.id)/Math.max(a.p.minimo,1)-stockDe(b.p.id)/Math.max(b.p.minimo,1)); const repV=rep.slice(0,mv?4:6);
   const d30=[];for(let i=29;i>=0;i--){ const f=addDias(h,-i); d30.push(ventasValidas(f,f).reduce((a,v)=>a+v.total,0)); }
   const saludo=(()=>{const hh=new Date().getHours();return hh<12?'Buen día':hh<20?'Buenas tardes':'Buenas noches';})();
-  return `${S.config.demo?`<div class="demo"><span>Estás viendo <b>datos de ejemplo</b>. Probá todo con tranquilidad.</span><button class="btn sm" data-act="go" data-v="ajustes">Empezar con mis datos</button></div>`:''}
-  ${encab(fechaLarga,"",`<button class="btn pri" data-act="go" data-v="ventas">Nueva venta</button>`)}
+  return `${S.config.demo?`<div class="demo"><span>Estás viendo <b>datos de ejemplo</b>. Probá todo con tranquilidad.</span>${mv?'':'<button class="btn sm" data-act="go" data-v="ajustes">Empezar con mis datos</button>'}</div>`:''}
+  ${encab(fechaLarga,"",mv?'':`<button class="btn pri" data-act="go" data-v="ventas">Nueva venta</button>`)}
   <section class="hoy" aria-label="Ventas de hoy"><div class="hoy-n" id="hoyn" aria-live="polite">${window.HOY_DIAS[dias.length-1]}</div><div class="hoy-g"><span class="k">Últimos 14 días</span><div class="bars" role="img" aria-label="Ventas por día">${dias.map((d,i)=>{const hy=i===dias.length-1, w=hy?'Hoy':dsem(d.f), ht=Math.max(2,d.t/mx*100); return `<div class="col" tabindex="0" role="button" aria-pressed="false" data-i="${i}" style="--h:${ht}%" aria-label="${w} ${fechaTxt(d.f)}: ${money(d.t)}"><div class="bar1" style="height:${ht}%"></div><div class="lb"><span class="wd${/^(Sáb|Dom)$/.test(w)?' fin':''}">${w}</span><span>${d.f.slice(8)}</span></div></div>`;}).join('')}</div></div></section>
   <div class="kpis">
    <div class="kpi"><div class="k">Ventas, últimos 30 días</div><div class="v">${money(rm.ingresos)}</div>${spark(d30)}<div class="d">${rm.vs.length} ventas ${delta(rm.ingresos,ra.ingresos,"vs. 30 días anteriores",false,addDias(mes,-30))}</div></div>
@@ -247,7 +248,7 @@ function pagFit(key){ const P=PAGS[key]; let el=document.querySelector(pagSel(ke
 // Medición base (una vez por contenido y ancho): se dibuja la lista entera sin pintarla para conocer el ancho de cada columna y la fila más alta.
 function pagBase(key){ const P=PAGS[key]; P.ocup=true; const n0=P.n, p0=P.p; P.rh=0; P.cw=[];
   try{ P.n=1e9; P.p=1; P.re(); const e=document.querySelector(pagSel(key));
-    if(e){ const t=e.querySelector('table'), w=t?[...t.querySelectorAll('thead th')].map(x=>x.getBoundingClientRect().width):[]; P.cw=w.reduce((a,b)=>a+b,0)>50?w:[];
+    if(e){ const t=e.querySelector('table'), w=t?[...t.querySelectorAll('thead th')].map(x=>x.getBoundingClientRect().width):[]; P.cw=(innerWidth>640&&w.reduce((a,b)=>a+b,0)>50)?w:[]; // en celular la tabla pasa a tarjetas: no se fijan columnas
       let m=0; pagFilas(e).forEach(f=>{ const h=f.offsetHeight; if(h>m) m=h; }); P.rh=m; } }
   finally{ P.n=n0; P.p=p0; P.re(); P.ocup=false; } }
 /* Estabilidad entre páginas: (1) las columnas de las tablas quedan fijas con el ancho que necesita la lista entera, así el texto no se corre al cambiar de página;
@@ -255,7 +256,7 @@ function pagBase(key){ const P=PAGS[key]; P.ocup=true; const n0=P.n, p0=P.p; P.r
 function pagAplicar(key){ const P=PAGS[key]; let el=document.querySelector(pagSel(key)); if(!P||!el||P.ocup) return;
   const hk=P.kk+'|'+P.n; if(P.hk!==hk){ P.hk=hk; const tp=Math.ceil((P.tot||0)/P.n), p0=P.p;
     if(tp>1&&tp<=60){ P.ocup=true; let hm=0; try{ for(let q=1;q<=tp;q++){ P.p=q; P.re(); const e=document.querySelector(pagSel(key)); if(e){ e.style.minHeight=''; hm=Math.max(hm,e.offsetHeight); } } } finally{ P.p=p0; P.re(); P.ocup=false; } P.h=Math.max(P.h||0,hm); el=document.querySelector(pagSel(key)); if(!el) return; } }
-  const t=el.querySelector('table'); if(t&&P.cw&&P.cw.length&&P.cw.length===t.querySelectorAll('thead th').length){ if(!t.querySelector('colgroup')){ const cg=document.createElement('colgroup'); P.cw.forEach(w=>{ const c=document.createElement('col'); c.style.width=w+'px'; cg.appendChild(c); }); t.insertBefore(cg,t.firstChild); } t.style.tableLayout='fixed'; t.style.minWidth=P.cw.reduce((a,b)=>a+b,0)+'px'; }
+  const t=el.querySelector('table'); if(t&&innerWidth>640&&P.cw&&P.cw.length&&P.cw.length===t.querySelectorAll('thead th').length){ if(!t.querySelector('colgroup')){ const cg=document.createElement('colgroup'); P.cw.forEach(w=>{ const c=document.createElement('col'); c.style.width=w+'px'; cg.appendChild(c); }); t.insertBefore(cg,t.firstChild); } t.style.tableLayout='fixed'; t.style.minWidth=P.cw.reduce((a,b)=>a+b,0)+'px'; }
   el.style.minHeight=''; P.h=Math.max(P.h||0,el.offsetHeight); el.style.minHeight=P.h+'px'; }
 ACT['pag']=el=>{ const k=el.dataset.k, P=PAGS[k]; if(!P) return; P.p=+el.dataset.p||1; if(P.re){ P.re(); pagAplicar(k); } };
 addEventListener('resize',()=>{ clearTimeout(pagFit._t); pagFit._t=setTimeout(()=>Object.keys(PAGS).forEach(k=>{ if(document.querySelector('[data-pf="'+k+'"]')){ PAGS[k].aj=0; if(PAGS[k].re) PAGS[k].re(); } }),120); });
