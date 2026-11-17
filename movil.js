@@ -16,7 +16,7 @@ MOV.addEventListener('change',()=>{ if(!S) return; menuAbrir(false); pintarMarco
 const ICO_MENU='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>';
 const navIco=k=>{ const n=NAV.find(x=>x[0]===k); return n?`<svg viewBox="0 0 24 24" aria-hidden="true">${n[2]}</svg>`:''; };
 
-function menuAbrir(on){ document.body.classList.toggle('menu-on',on); const b=$('#mbtn'); if(b) b.setAttribute('aria-expanded',on?'true':'false'); }
+function menuAbrir(on){ document.body.classList.toggle('menu-on',on); const b=$('#bnav [data-act="menu-mov"]'); if(b) b.setAttribute('aria-expanded',on?'true':'false'); }
 ACT['menu-mov']=()=>menuAbrir(!document.body.classList.contains('menu-on'));
 document.addEventListener('click',e=>{ if(!document.body.classList.contains('menu-on')) return;
   if(e.target.closest('#side .nav a')||e.target.id==='mvelo') menuAbrir(false); });
@@ -25,7 +25,7 @@ window.addEventListener('hashchange',()=>menuAbrir(false));
 
 function bnavHtml(){ const c=conteos(), enMenu=!BNAV.some(([k])=>k===UI.vista);
   return BNAV.map(([k,t])=>`<a href="#${k}" class="${UI.vista===k?'on':''}" ${UI.vista===k?'aria-current="page"':''}>${navIco(k)}<span>${t}</span>${c[k]?`<i>${c[k]}</i>`:''}</a>`).join('')
-    +`<button type="button" data-act="menu-mov" class="${enMenu?'on':''}" aria-label="Todas las secciones">${ICO_MENU}<span>${enMenu?(NAV.find(x=>x[0]===UI.vista)||[,'Más'])[1]:'Más'}</span>${c.inventario?`<i>${c.inventario}</i>`:''}</button>`; }
+    +`<button type="button" data-act="menu-mov" class="${enMenu?'on':''}" aria-label="Todas las secciones" aria-expanded="${document.body.classList.contains('menu-on')?'true':'false'}">${ICO_MENU}<span>${enMenu?(NAV.find(x=>x[0]===UI.vista)||[,'Más'])[1]:'Más'}</span>${c.inventario?`<i>${c.inventario}</i>`:''}</button>`; }
 
 // las tablas con encabezado pasan a tarjetas: cada celda lleva el nombre de su columna
 function tablasATarjetas(root){ root.querySelectorAll('.tw > table:not(.tcards)').forEach(t=>{ if(t.closest('.ccl')) return;
@@ -40,10 +40,13 @@ function barraVenta(){ let b=$('#cartbar'); const ver=UI.vista==='ventas'&&UI.ve
 
 let _mraf=0;
 function movilSync(){ _mraf=0; if(!S) return;
-  const side=$('#side'); if(side&&!$('#mbtn')){ side.insertAdjacentHTML('beforeend',`<button type="button" class="mbtn" id="mbtn" data-act="menu-mov" aria-label="Abrir el menú" aria-expanded="false">${ICO_MENU}</button>`); }
+  const side=$('#side'); const pw=$('#powered');
+  // «Powered by Gestia» no flota en el celular: se copia al pie del panel de secciones (pintarMarco lo borra al redibujar, acá se repone)
+  if(side&&pw&&!side.querySelector('.powered.pie')){ const c=pw.cloneNode(true); c.removeAttribute('id'); c.classList.add('pie'); side.appendChild(c); }
   if(side&&!$('#mvelo')) document.body.insertAdjacentHTML('beforeend','<div class="mvelo" id="mvelo"></div>');
   let bn=$('#bnav'); if(!bn){ bn=document.createElement('nav'); bn.id='bnav'; bn.className='bnav'; bn.setAttribute('aria-label','Secciones principales'); document.body.appendChild(bn); }
   const h=bnavHtml(); if(bn._h!==h){ bn._h=h; bn.innerHTML=h; }
+  if(bn.offsetHeight) document.documentElement.style.setProperty('--bnav-h',bn.offsetHeight+'px'); // el panel de secciones se apoya justo sobre la barra
   tablasATarjetas(document); barraVenta(); }
 new MutationObserver(()=>{ if(!_mraf) _mraf=requestAnimationFrame(movilSync); }).observe(document.body,{childList:true,subtree:true});
 document.addEventListener('DOMContentLoaded',()=>setTimeout(movilSync,0));

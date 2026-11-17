@@ -376,22 +376,24 @@ input[type="date"]{background-image:url("data:image/svg+xml,%3Csvg xmlns='http:/
 @media (max-width:980px){.kpis.k3{grid-template-columns:repeat(2,minmax(0,1fr))}}
 
 /* ================= celular ================= */
-.mbtn,.bnav,.mvelo,.cartbar{display:none}
+.bnav,.mvelo,.cartbar{display:none}
 @media (max-width:860px){
-  /* arriba: marca y botón de menú; las secciones van abajo */
-  .side{position:relative;justify-content:space-between;padding:10px 12px 10px 14px}
-  .side .nav{display:none}
-  .mbtn{display:grid;place-items:center;width:40px;height:40px;border:0;border-radius:10px;background:#ffffff10;color:var(--side-ink);cursor:pointer}
-  .mbtn svg,.bnav svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
-  /* menú lateral con todas las secciones (la misma barra de la computadora) */
+  /* arriba no hay barra: marca, secciones y pie viven en el panel que sube desde «Más» */
+  .side{display:none}
+  .bnav svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+  /* panel con todas las secciones: se abre hacia arriba, pegado a la barra de abajo, que queda a la vista */
   body.menu-on{overflow:hidden}
-  body.menu-on .side{position:fixed;top:0;left:0;bottom:0;width:min(300px,84vw);height:100%;z-index:70;flex-direction:column;align-items:stretch;justify-content:flex-start;gap:16px;padding:18px 12px calc(14px + env(safe-area-inset-bottom));overflow-y:auto;box-shadow:12px 0 40px #0007;animation:mslide .18s ease-out}
-  body.menu-on .side .nav{display:flex;flex-direction:column;overflow:visible;flex:none}
+  body.menu-on .side{display:flex;position:fixed;top:auto;left:0;right:0;bottom:var(--bnav-h,calc(66px + env(safe-area-inset-bottom)));width:auto;height:auto;max-height:min(74vh,calc(100dvh - var(--bnav-h,66px) - 20px));z-index:70;flex-direction:column;align-items:stretch;justify-content:flex-start;gap:12px;padding:10px 14px 14px;overflow-y:auto;overscroll-behavior:contain;border-radius:18px 18px 0 0;box-shadow:0 -14px 40px #0006;animation:mpanel .2s ease-out}
+  body.menu-on .side::before{content:"";flex:none;align-self:center;width:38px;height:4px;border-radius:99px;background:#ffffff40}
+  body.menu-on .side .nav{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px;overflow:visible;flex:none}
   body.menu-on .biz,body.menu-on .sidefoot{display:flex}
-  body.menu-on .nav .grp{display:block}
-  body.menu-on .nav a{white-space:normal;padding:10px;font-size:15px}
-  body.menu-on .mbtn{position:absolute;top:14px;right:10px}
+  body.menu-on .nav .grp{display:block;grid-column:1/-1;padding:10px 10px 2px}
+  body.menu-on .nav .grp:first-child{padding-top:0}
+  body.menu-on .nav a{white-space:normal;padding:11px 10px;font-size:14.5px;border-radius:10px}
+  body.menu-on .nav a.on{box-shadow:none}
+  body.menu-on .sidefoot{margin-top:0;padding:8px 6px 0;border-top:1px solid #ffffff1a}
   body.menu-on .mvelo{display:block;position:fixed;inset:0;z-index:65;background:var(--scrim);backdrop-filter:blur(2px)}
+  body.menu-on .bnav{z-index:72}
   /* barra de secciones abajo */
   .bnav{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));position:fixed;left:0;right:0;bottom:0;z-index:40;background:var(--side);padding:6px 4px calc(6px + env(safe-area-inset-bottom));border-top:1px solid #ffffff14;box-shadow:0 -6px 20px #0003}
   .bnav a,.bnav button{position:relative;display:flex;flex-direction:column;align-items:center;gap:3px;min-width:0;padding:6px 2px;border:0;border-radius:10px;background:none;color:var(--side-muted);font:inherit;font-size:11px;font-weight:600;text-decoration:none;cursor:pointer}
@@ -412,7 +414,7 @@ input[type="date"]{background-image:url("data:image/svg+xml,%3Csvg xmlns='http:/
   .head .bar{gap:6px}
   .card{padding:14px}
 }
-@keyframes mslide{from{transform:translateX(-100%)}to{transform:none}}
+@keyframes mpanel{from{transform:translateY(28px);opacity:.3}to{transform:none;opacity:1}}
 @media (max-width:640px){
   /* tablas como tarjetas: la primera columna es el título y el resto va «columna: valor» */
   .tw:has(> table.tcards){border:0;background:none;box-shadow:none;overflow:visible;border-radius:0}
@@ -708,12 +710,12 @@ table.tcards .stk{align-items:flex-start}
 .powered b{font-weight:700;letter-spacing:-.01em}
 @media print{.powered{display:none}}
 @media (max-width:860px){
-  .powered{right:10px;bottom:calc(70px + env(safe-area-inset-bottom))}
-  body.con-cbar .powered{bottom:calc(126px + env(safe-area-inset-bottom))}
-  /* sin logo arriba: el botón de menú queda a la derecha y, abierto, el menú deja lugar para cerrarlo */
-  .side .mbtn{margin-left:auto}
-  body.menu-on .side{padding-top:64px}
+  /* en el celular no flota sobre la pantalla: queda en el pie del panel de secciones (movil.js lo copia ahí) */
+  #powered{display:none}
+  body.menu-on .powered.pie{display:inline-flex;align-self:center}
 }
+.powered.pie{display:none;position:static;right:auto;bottom:auto;background:#ffffff14;color:var(--side-ink);border-color:#ffffff26;box-shadow:none}
+.powered.pie:hover{transform:none;border-color:var(--mint)}
 
 /* paginado de listas largas */
 .pager{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:14px 2px 2px}
@@ -846,4 +848,19 @@ div[data-pf]:not(.provs):not(.tw):not(.filas){display:flow-root}
   /* Productos: de los 5 filtros quedan buscar, categoría y «ver» (stock bajo / sin stock); proveedor y estado quedan para la compu */
   #view[data-v="productos"] .field:has([data-bind="f.prod.prov"]),
   #view[data-v="productos"] .field:has([data-bind="f.prod.est"]){display:none}
+}
+
+
+/* ================= celular: pantalla limpia (sin títulos arriba) y tarjetas sin huecos ================= */
+@media (max-width:860px){
+  /* el título de cada sección lo da la barra de abajo: queda sólo para lectores de pantalla y las acciones de la sección */
+  .head{position:static;margin:0;padding:0;border:0;background:none;-webkit-backdrop-filter:none;backdrop-filter:none;justify-content:flex-start}
+  .main>.head:first-child{margin-top:0}
+  .head>div:first-child{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+  .head:not(:has(.bar>*)){position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+}
+@media (max-width:640px){
+  /* con 2 columnas, la última tarjeta suelta ocupa todo el ancho en vez de dejar un cuadrado en blanco */
+  .kpis,.franja{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .kpis>:last-child:nth-child(odd),.franja>:last-child:nth-child(odd){grid-column:1/-1}
 }
